@@ -289,13 +289,31 @@
     var volIcon = document.getElementById('volIcon');
     var fullscreenBtn = document.getElementById('fullscreenBtn');
 
+    var randomJumpTimer = null;
+    function scheduleNextRandomJump() {
+      clearTimeout(randomJumpTimer);
+      if (!v.src || !v.duration || !isFinite(v.duration) || v.duration <= 0) return;
+      var delayMs = 1500 + Math.random() * 3500;
+      randomJumpTimer = setTimeout(function () {
+        v.currentTime = Math.random() * v.duration;
+        updateUI();
+        scheduleNextRandomJump();
+      }, delayMs);
+    }
+
     function loadFile(file) {
       if (!file) return;
+      clearTimeout(randomJumpTimer);
+      randomJumpTimer = null;
       v.src = URL.createObjectURL(file);
       startScreen.classList.add('hidden');
       videoContainer.classList.remove('hidden');
       v.play();
       showControls();
+      v.addEventListener('loadedmetadata', function onMeta() {
+        v.removeEventListener('loadedmetadata', onMeta);
+        scheduleNextRandomJump();
+      }, { once: true });
     }
 
     document.getElementById('f').addEventListener('change', function () { loadFile(this.files[0]); });
@@ -366,7 +384,6 @@
       }
     });
 
-    var hideControlsTimer;
     var hideDelay = 2000;
     function scheduleHideControls() {
       clearTimeout(hideControlsTimer);
