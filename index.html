@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Minimal Video Player</title>
 <style>
-  /* Global box sizing for consistency */
   *, *::before, *::after {
     box-sizing: border-box;
   }
@@ -45,22 +44,31 @@
     background: #fff;
   }
 
-  /* Video fills viewport, keeps aspect ratio */
+  /* Flipped wrapper */
+  .video-wrapper {
+    transform: scaleX(-1); /* flip video horizontally */
+    display: inline-block;
+  }
+
+  /* Video itself normal, controls unaffected */
   video {
     max-width: 100%;
     max-height: 100%;
-    transform: scaleX(-1); /* flip horizontally */
-    object-fit: contain; /* ensures consistent scaling */
     display: block;
+    object-fit: contain;
   }
 </style>
 </head>
 <body>
 
+<!-- File input centered -->
 <input type="file" id="videoFile" accept="video/*" title="Choose Video">
 
+<!-- Video player container -->
 <div class="player-container" id="playerContainer">
-  <video id="videoPlayer" controls></video>
+  <div class="video-wrapper">
+    <video id="videoPlayer" controls></video>
+  </div>
 </div>
 
 <script>
