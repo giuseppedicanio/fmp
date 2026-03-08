@@ -2,474 +2,176 @@
 <html lang="en">
 
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
-<title>Flipped Player</title>
+<title>Minimal Video Player</title>
 
 <style>
-
-*{
-box-sizing:border-box;
-}
-
-body{
-margin:40px;
-font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial;
-background:white;
-color:#111;
-}
-
-a.home-link{
-position:fixed;
-bottom:12px;
-left:12px;
-font-size:11px;
-color:#444;
-text-decoration:none;
-}
-
-/* START */
+*{box-sizing:border-box;}
+body{margin:40px;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial;background:#fff;color:#111;}
+a.home-link{position:fixed;bottom:12px;left:12px;font-size:11px;color:#444;text-decoration:none;}
 
 .start-screen{
-position:fixed;
-top:40px;
-left:40px;
-right:40px;
-bottom:40px;
-display:flex;
-align-items:center;
-justify-content:center;
+  position:fixed;top:40px;left:40px;right:40px;bottom:40px;
+  display:flex;align-items:center;justify-content:center;
 }
-
-.start-screen.hidden{
-display:none;
-}
-
-.choose-btn-wrap label{
-padding:12px 22px;
-background:#e8e8e8;
-cursor:pointer;
-font-size:14px;
-}
-
-.choose-btn-wrap label:hover{
-background:#dedede;
-}
-
-.choose-btn-wrap input{
-display:none;
-}
-
-/* VIDEO */
+.start-screen.hidden{display:none;}
+label{padding:10px 20px;background:#eee;cursor:pointer;font-size:14px;}
+label:hover{background:#dedede;}
+input[type=file]{display:none;}
 
 .video-container{
-position:fixed;
-top:40px;
-left:40px;
-right:40px;
-bottom:40px;
-background:#000;
-display:flex;
-align-items:center;
-justify-content:center;
+  position:fixed;top:40px;left:40px;right:40px;bottom:40px;
+  background:#000;display:flex;align-items:center;justify-content:center;
 }
-
-.video-container.hidden{
-display:none;
-}
-
-video{
-width:100%;
-height:100%;
-object-fit:contain;
-transform:scaleX(-1);
-}
-
-/* CONTROLS */
+.video-container.hidden{display:none;}
+video{width:100%;height:100%;object-fit:contain;transform:scaleX(-1);}
 
 .controls{
-
-position:absolute;
-bottom:0;
-left:0;
-right:0;
-
-background:rgba(255,255,255,0.96);
-border-top:1px solid #ddd;
-
-display:flex;
-align-items:center;
-gap:10px;
-
-padding:10px;
-
-opacity:0;
-pointer-events:none;
-transition:opacity .2s;
-
+  position:absolute;bottom:0;left:0;right:0;
+  display:flex;align-items:center;gap:10px;
+  padding:8px 10px;
+  background:rgba(255,255,255,0.95);
+  opacity:0;transition:opacity .2s;
 }
-
-.controls.visible{
-opacity:1;
-pointer-events:auto;
-}
-
-/* BUTTON */
+.controls.visible{opacity:1;}
 
 button{
-
-border:none;
-background:#f0f0f0;
-
-height:32px;
-width:32px;
-
-display:flex;
-align-items:center;
-justify-content:center;
-
-cursor:pointer;
-
+  border:none;background:none;cursor:pointer;
+  width:28px;height:28px;
+  display:flex;align-items:center;justify-content:center;
 }
+button:hover svg{fill:#111;}
 
-button:hover{
-background:#e5e5e5;
-}
+svg{width:18px;height:18px;stroke:none;fill:#111;}
 
-svg{
-width:18px;
-height:18px;
-stroke:#111;
-stroke-width:2;
-fill:none;
-}
+.progress{flex:1;height:4px;background:#ddd;cursor:pointer;position:relative;}
+.progress-fill{position:absolute;height:100%;background:#111;width:0%;}
 
-/* PROGRESS */
+.time{font-size:11px;color:#444;min-width:70px;text-align:right;}
 
-.progress-wrap{
-
-flex:1;
-height:6px;
-background:#dcdcdc;
-
-cursor:pointer;
-
-}
-
-.progress-fill{
-
-height:100%;
-background:#111;
-width:0%;
-
-}
-
-/* TIME */
-
-.time{
-font-size:12px;
-color:#444;
-min-width:80px;
-text-align:right;
-}
-
-/* VOLUME */
-
-.volume{
-display:flex;
-align-items:center;
-gap:6px;
-}
-
-#volumeSlider{
-width:70px;
-}
-
-/* MOBILE */
+.volume{display:flex;align-items:center;gap:6px;}
+input[type=range]{-webkit-appearance:none;appearance:none;width:70px;height:3px;background:#ddd;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:10px;height:10px;background:#111;cursor:pointer;}
+input[type=range]::-moz-range-thumb{width:10px;height:10px;background:#111;border:none;cursor:pointer;}
 
 @media (max-width:700px){
-
-body{
-margin:10px;
+body{margin:10px;}
+.video-container{top:10px;left:10px;right:10px;bottom:10px;}
+.time{display:none;}
+input[type=range]{width:50px;}
 }
-
-.video-container{
-top:10px;
-left:10px;
-right:10px;
-bottom:10px;
-}
-
-.time{
-display:none;
-}
-
-#volumeSlider{
-width:50px;
-}
-
-}
-
 </style>
-
 </head>
 
 <body>
 
-<a class="home-link" href="https://giuseppedicanio.github.io">
-Giuseppe Dicanio
-</a>
-
 <div class="start-screen" id="startScreen">
-
-<div class="choose-btn-wrap">
-<label for="fileInput">Choose file</label>
-<input id="fileInput" type="file" accept="video/*">
+  <label for="fileInput">Choose file</label>
+  <input id="fileInput" type="file" accept="video/*">
 </div>
 
-</div>
+<div class="video-container hidden" id="container">
+  <video id="video" playsinline></video>
 
-<div class="video-container hidden" id="videoContainer">
+  <div class="controls" id="controls">
 
-<video id="video" playsinline></video>
+    <button id="playBtn">
+      <svg id="playIcon" viewBox="0 0 24 24"><polygon points="6 4 20 12 6 20"></polygon></svg>
+      <svg id="pauseIcon" viewBox="0 0 24 24" style="display:none">
+        <rect x="6" y="4" width="4" height="16"></rect>
+        <rect x="14" y="4" width="4" height="16"></rect>
+      </svg>
+    </button>
 
-<div class="controls" id="controls">
+    <div class="progress" id="progress">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
 
-<button id="playBtn">
+    <div class="volume">
+      <button id="muteBtn">
+        <svg id="volIcon" viewBox="0 0 24 24">
+          <polygon points="4 9 8 9 13 4 13 20 8 15 4 15"></polygon>
+          <path d="M16 8c1.5 1.5 1.5 6 0 8"></path>
+        </svg>
+      </button>
+      <input id="volumeSlider" type="range" min="0" max="1" step="0.05" value="1">
+    </div>
 
-<svg id="playIcon" viewBox="0 0 24 24">
-<polygon points="6 4 20 12 6 20"></polygon>
-</svg>
+    <button id="fullscreenBtn">
+      <svg viewBox="0 0 24 24">
+        <rect x="4" y="4" width="6" height="6"></rect>
+        <rect x="14" y="4" width="6" height="6"></rect>
+        <rect x="4" y="14" width="6" height="6"></rect>
+        <rect x="14" y="14" width="6" height="6"></rect>
+      </svg>
+    </button>
 
-<svg id="pauseIcon" viewBox="0 0 24 24" style="display:none">
-<line x1="7" y1="4" x2="7" y2="20"></line>
-<line x1="17" y1="4" x2="17" y2="20"></line>
-</svg>
+    <div class="time" id="time">0:00</div>
 
-</button>
-
-<div class="progress-wrap" id="progressWrap">
-<div class="progress-fill" id="progressFill"></div>
-</div>
-
-<div class="time" id="time">0:00 / 0:00</div>
-
-<div class="volume">
-
-<button id="muteBtn">
-
-<svg id="volIcon" viewBox="0 0 24 24">
-<polygon points="4 9 8 9 13 4 13 20 8 15 4 15"></polygon>
-<path d="M16 8c1.5 1.5 1.5 6 0 8"></path>
-</svg>
-
-</button>
-
-<input id="volumeSlider" type="range" min="0" max="1" step="0.05" value="1">
-
-</div>
-
-<button id="fullscreenBtn">
-
-<svg viewBox="0 0 24 24">
-<polyline points="4 9 4 4 9 4"></polyline>
-<polyline points="20 9 20 4 15 4"></polyline>
-<polyline points="4 15 4 20 9 20"></polyline>
-<polyline points="20 15 20 20 15 20"></polyline>
-</svg>
-
-</button>
-
-</div>
-
+  </div>
 </div>
 
 <script>
+const video=document.getElementById("video"),
+  startScreen=document.getElementById("startScreen"),
+  container=document.getElementById("container"),
+  controls=document.getElementById("controls"),
+  playBtn=document.getElementById("playBtn"),
+  playIcon=document.getElementById("playIcon"),
+  pauseIcon=document.getElementById("pauseIcon"),
+  progress=document.getElementById("progress"),
+  progressFill=document.getElementById("progressFill"),
+  volumeSlider=document.getElementById("volumeSlider"),
+  muteBtn=document.getElementById("muteBtn"),
+  fullscreenBtn=document.getElementById("fullscreenBtn"),
+  time=document.getElementById("time");
 
-const video=document.getElementById("video")
-const startScreen=document.getElementById("startScreen")
-const container=document.getElementById("videoContainer")
-
-const controls=document.getElementById("controls")
-
-const playBtn=document.getElementById("playBtn")
-const playIcon=document.getElementById("playIcon")
-const pauseIcon=document.getElementById("pauseIcon")
-
-const progressWrap=document.getElementById("progressWrap")
-const progressFill=document.getElementById("progressFill")
-
-const timeEl=document.getElementById("time")
-
-const muteBtn=document.getElementById("muteBtn")
-const volumeSlider=document.getElementById("volumeSlider")
-
-const fullscreenBtn=document.getElementById("fullscreenBtn")
-
-let hideTimer
-
-function loadFile(file){
-
-if(!file)return
-
-video.src=URL.createObjectURL(file)
-
-startScreen.classList.add("hidden")
-container.classList.remove("hidden")
-
-video.play()
-
-showControls()
-
-}
+let hideTimer;
 
 fileInput.onchange=function(){
-loadFile(this.files[0])
+  const file=this.files[0]; if(!file)return;
+  video.src=URL.createObjectURL(file);
+  startScreen.classList.add("hidden");
+  container.classList.remove("hidden");
+  video.play();
 }
 
-/* PLAY */
+function togglePlay(){video.paused?video.play():video.pause();}
+playBtn.onclick=togglePlay; video.onclick=togglePlay;
 
-function togglePlay(){
+video.addEventListener("play",()=>{playIcon.style.display="none"; pauseIcon.style.display="block";});
+video.addEventListener("pause",()=>{playIcon.style.display="block"; pauseIcon.style.display="none";});
 
-if(video.paused){
-video.play()
-}else{
-video.pause()
+video.ontimeupdate=()=>{
+  let p=video.currentTime/(video.duration||1);
+  progressFill.style.width=(p*100)+"%";
+  let m=Math.floor(video.currentTime/60), s=Math.floor(video.currentTime%60);
+  time.textContent=m+":"+(s<10?"0":"")+s;
 }
 
+progress.onclick=e=>{
+  const rect=progress.getBoundingClientRect();
+  const pos=(e.clientX-rect.left)/rect.width;
+  video.currentTime=pos*video.duration;
 }
 
-playBtn.onclick=togglePlay
-video.onclick=togglePlay
-
-video.addEventListener("play",()=>{
-
-playIcon.style.display="none"
-pauseIcon.style.display="block"
-
-})
-
-video.addEventListener("pause",()=>{
-
-playIcon.style.display="block"
-pauseIcon.style.display="none"
-
-})
-
-/* KEYBOARD */
-
-document.addEventListener("keydown",e=>{
-
-if(e.code==="Space"){
-e.preventDefault()
-togglePlay()
-}
-
-if(e.code==="ArrowRight")video.currentTime+=5
-if(e.code==="ArrowLeft")video.currentTime-=5
-
-})
-
-/* TIME */
-
-function formatTime(s){
-
-let m=Math.floor(s/60)
-let sec=Math.floor(s%60)
-
-return m+":"+(sec<10?"0":"")+sec
-
-}
-
-function updateUI(){
-
-let p=video.currentTime/(video.duration||1)
-
-progressFill.style.width=(p*100)+"%"
-
-timeEl.textContent=
-formatTime(video.currentTime)+" / "+formatTime(video.duration||0)
-
-}
-
-video.ontimeupdate=updateUI
-video.onloadedmetadata=updateUI
-
-/* SEEK */
-
-progressWrap.onclick=e=>{
-
-const rect=progressWrap.getBoundingClientRect()
-
-const pos=(e.clientX-rect.left)/rect.width
-
-video.currentTime=pos*video.duration
-
-}
-
-/* VOLUME */
-
-volumeSlider.oninput=function(){
-
-video.volume=this.value
-video.muted=false
-
-}
-
-/* MUTE */
-
-muteBtn.onclick=function(){
-
-video.muted=!video.muted
-
-if(video.muted){
-volumeSlider.value=0
-}else{
-volumeSlider.value=video.volume
-}
-
-}
-
-/* FULLSCREEN */
+volumeSlider.oninput=function(){video.volume=this.value; video.muted=false;}
+muteBtn.onclick=function(){video.muted=!video.muted;}
 
 fullscreenBtn.onclick=function(){
-
-if(!document.fullscreenElement){
-container.requestFullscreen()
-}else{
-document.exitFullscreen()
+  if(!document.fullscreenElement) container.requestFullscreen(); else document.exitFullscreen();
 }
-
-}
-
-/* CONTROLS */
 
 function showControls(){
-
-controls.classList.add("visible")
-
-clearTimeout(hideTimer)
-
-hideTimer=setTimeout(()=>{
-
-if(!video.paused)
-controls.classList.remove("visible")
-
-},2000)
-
+  controls.classList.add("visible");
+  clearTimeout(hideTimer);
+  hideTimer=setTimeout(()=>{if(!video.paused)controls.classList.remove("visible");},2000);
 }
 
-container.addEventListener("mousemove",showControls)
-container.addEventListener("touchstart",showControls)
-
-video.addEventListener("pause",()=>{
-controls.classList.add("visible")
-})
-
-video.addEventListener("play",showControls)
-
+container.addEventListener("mousemove",showControls);
+container.addEventListener("touchstart",showControls);
+video.addEventListener("pause",()=>controls.classList.add("visible"));
 </script>
 
 </body>
