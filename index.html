@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>fmp</title>
+<title>Minimal Video Player</title>
 <style>
   body {
     margin: 0;
     height: 100vh;
     display: flex;
-    flex-direction: column;
+    justify-content: center;
     align-items: center;
     background: #fff;
     font-family: sans-serif;
@@ -32,7 +32,7 @@
     width: 90vw;
     max-height: 85vh;
     background: #000;
-    transform: scaleX(-1); /* flip solo il video */
+    transform: scaleX(-1); /* flip video horizontally */
   }
 </style>
 </head>
@@ -55,7 +55,7 @@ fileInput.addEventListener('change', () => {
     videoPlayer.src = URL.createObjectURL(file);
     videoPlayer.play();
     playerContainer.style.display = 'flex';
-    fileInput.style.alignSelf = 'flex-start'; // sposta in alto
+    fileInput.style.alignSelf = 'flex-start'; // move input to top
   }
 });
 </script>
