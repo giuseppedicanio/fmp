@@ -3,49 +3,62 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Flip Media Player</title>
+<title>Minimal Video Player</title>
 <style>
+  /* Global box sizing for consistency */
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
   html, body {
     margin: 0;
+    padding: 0;
     height: 100%;
     width: 100%;
-    display: flex;
+    background: #fff;
+    font-family: sans-serif;
+    overflow: hidden;
+  }
+
+  /* File input */
+  #videoFile {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+    padding: 14px 28px;
+    font-size: 16px;
+    z-index: 10;
+  }
+
+  /* Video container fills screen */
+  .player-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
     justify-content: center;
     align-items: center;
     background: #fff;
-    font-family: sans-serif;
-    flex-direction: column;
   }
 
-  /* File input styling */
-  #videoFile {
-    cursor: pointer;
-    padding: 12px 24px;
-    font-size: 16px;
-  }
-
-  /* Video container */
-  .player-container {
-    display: none; /* hidden until video is selected */
-    flex-direction: column;
-    align-items: center;
-  }
-
+  /* Video fills viewport, keeps aspect ratio */
   video {
-    max-width: 90vw;
-    max-height: 85vh;
-    background: #000;
-    transform: scaleX(-1); /* flip video horizontally */
+    max-width: 100%;
+    max-height: 100%;
+    transform: scaleX(-1); /* flip horizontally */
+    object-fit: contain; /* ensures consistent scaling */
     display: block;
   }
 </style>
 </head>
 <body>
 
-<!-- Centered file input -->
 <input type="file" id="videoFile" accept="video/*" title="Choose Video">
 
-<!-- Video player container -->
 <div class="player-container" id="playerContainer">
   <video id="videoPlayer" controls></video>
 </div>
@@ -55,18 +68,16 @@ const fileInput = document.getElementById('videoFile');
 const playerContainer = document.getElementById('playerContainer');
 const videoPlayer = document.getElementById('videoPlayer');
 
-// Load video on file selection
 fileInput.addEventListener('change', () => {
   const file = fileInput.files[0];
-  if (file) {
+  if(file){
     videoPlayer.src = URL.createObjectURL(file);
     videoPlayer.play();
 
-    // Show the video container
+    // Show video container
     playerContainer.style.display = 'flex';
 
-    // Optionally move the file input to top center
-    fileInput.style.position = 'absolute';
+    // Move file input to top center
     fileInput.style.top = '20px';
     fileInput.style.left = '50%';
     fileInput.style.transform = 'translateX(-50%)';
