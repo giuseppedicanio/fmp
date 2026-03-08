@@ -26,82 +26,13 @@
     flex-direction: column;
     align-items: center;
     width: 100%;
-    max-width: 100vw;
   }
 
   video {
     width: 90vw;
-    max-height: 80vh;
+    max-height: 85vh;
     background: #000;
-    transform: scaleX(-1);
-  }
-
-  /* Controlli minimal */
-  .controls {
-    display: flex;
-    align-items: center;
-    width: 90vw;
-    max-width: 900px;
-    margin-top: 5px;
-    gap: 10px;
-    font-size: 14px;
-    color: #333;
-  }
-
-  .play-btn {
-    width: 28px;
-    height: 28px;
-    border: none;
-    background: #333;
-    clip-path: polygon(25% 20%, 25% 80%, 75% 50%);
-    cursor: pointer;
-    transition: 0.2s;
-  }
-
-  .play-btn.paused {
-    clip-path: polygon(30% 20%, 30% 80%, 70% 20%, 70% 80%);
-  }
-
-  .progress {
-    flex: 1;
-    height: 6px;
-    background: #ddd;
-    cursor: pointer;
-    position: relative;
-  }
-
-  .progress-filled {
-    background: #333;
-    height: 100%;
-    width: 0%;
-  }
-
-  .volume {
-    width: 80px;
-    height: 6px;
-    background: #ddd;
-    cursor: pointer;
-    position: relative;
-  }
-
-  .volume-filled {
-    background: #333;
-    height: 100%;
-    width: 100%;
-  }
-
-  .time {
-    width: 60px;
-    text-align: center;
-  }
-
-  .fullscreen-btn {
-    width: 28px;
-    height: 28px;
-    border: none;
-    background: #333;
-    clip-path: polygon(0% 0%, 0% 30%, 10% 30%, 10% 10%, 30% 10%, 30% 0%, 0% 0%, 100% 100%, 70% 100%, 70% 90%, 90% 90%, 90% 70%, 100% 70%);
-    cursor: pointer;
+    transform: scaleX(-1); /* flip solo il video */
   }
 </style>
 </head>
@@ -110,35 +41,14 @@
 <input type="file" id="videoFile" accept="video/*">
 
 <div class="player-container" id="playerContainer">
-  <video id="videoPlayer"></video>
-  <div class="controls">
-    <button class="play-btn paused" id="playBtn"></button>
-    <span class="time" id="currentTime">0:00</span>
-    <div class="progress" id="progress">
-      <div class="progress-filled" id="progressFilled"></div>
-    </div>
-    <span class="time" id="duration">0:00</span>
-    <div class="volume" id="volume">
-      <div class="volume-filled" id="volumeFilled"></div>
-    </div>
-    <button class="fullscreen-btn" id="fullscreenBtn"></button>
-  </div>
+  <video id="videoPlayer" controls></video>
 </div>
 
 <script>
 const fileInput = document.getElementById('videoFile');
 const playerContainer = document.getElementById('playerContainer');
 const videoPlayer = document.getElementById('videoPlayer');
-const playBtn = document.getElementById('playBtn');
-const progress = document.getElementById('progress');
-const progressFilled = document.getElementById('progressFilled');
-const volume = document.getElementById('volume');
-const volumeFilled = document.getElementById('volumeFilled');
-const currentTimeEl = document.getElementById('currentTime');
-const durationEl = document.getElementById('duration');
-const fullscreenBtn = document.getElementById('fullscreenBtn');
 
-// Carica video
 fileInput.addEventListener('change', () => {
   const file = fileInput.files[0];
   if(file){
@@ -148,56 +58,6 @@ fileInput.addEventListener('change', () => {
     fileInput.style.alignSelf = 'flex-start'; // sposta in alto
   }
 });
-
-// Play/Pause
-playBtn.addEventListener('click', () => {
-  if(videoPlayer.paused){
-    videoPlayer.play();
-    playBtn.classList.remove('paused');
-  } else {
-    videoPlayer.pause();
-    playBtn.classList.add('paused');
-  }
-});
-
-// Tempo corrente
-videoPlayer.addEventListener('timeupdate', () => {
-  const percent = (videoPlayer.currentTime / videoPlayer.duration) * 100;
-  progressFilled.style.width = percent + '%';
-  currentTimeEl.textContent = formatTime(videoPlayer.currentTime);
-});
-
-// Durata
-videoPlayer.addEventListener('loadedmetadata', () => {
-  durationEl.textContent = formatTime(videoPlayer.duration);
-});
-
-// Barra progresso click
-progress.addEventListener('click', e => {
-  const pos = e.offsetX / progress.offsetWidth;
-  videoPlayer.currentTime = pos * videoPlayer.duration;
-});
-
-// Volume click
-volume.addEventListener('click', e => {
-  const pos = e.offsetX / volume.offsetWidth;
-  videoPlayer.volume = pos;
-  volumeFilled.style.width = pos * 100 + '%';
-});
-
-// Fullscreen
-fullscreenBtn.addEventListener('click', () => {
-  if (videoPlayer.requestFullscreen) videoPlayer.requestFullscreen();
-  else if (videoPlayer.webkitRequestFullscreen) videoPlayer.webkitRequestFullscreen();
-  else if (videoPlayer.msRequestFullscreen) videoPlayer.msRequestFullscreen();
-});
-
-// Formatta tempo mm:ss
-function formatTime(time){
-  const minutes = Math.floor(time / 60);
-  const seconds = Math.floor(time % 60);
-  return `${minutes}:${seconds < 10 ? '0'+seconds : seconds}`;
-}
 </script>
 
 </body>
