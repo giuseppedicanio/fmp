@@ -3,43 +3,49 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Flip Media Player</title>
+<title>Minimal Video Player</title>
 <style>
-  body {
+  html, body {
     margin: 0;
-    height: 100vh;
+    height: 100%;
+    width: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
     background: #fff;
     font-family: sans-serif;
+    flex-direction: column;
   }
 
+  /* File input styling */
   #videoFile {
     cursor: pointer;
-    margin: 20px;
-    transition: all 0.3s ease;
+    padding: 12px 24px;
+    font-size: 16px;
   }
 
+  /* Video container */
   .player-container {
-    display: none;
+    display: none; /* hidden until video is selected */
     flex-direction: column;
     align-items: center;
-    width: 100%;
   }
 
   video {
-    width: 90vw;
+    max-width: 90vw;
     max-height: 85vh;
     background: #000;
     transform: scaleX(-1); /* flip video horizontally */
+    display: block;
   }
 </style>
 </head>
 <body>
 
-<input type="file" id="videoFile" accept="video/*">
+<!-- Centered file input -->
+<input type="file" id="videoFile" accept="video/*" title="Choose Video">
 
+<!-- Video player container -->
 <div class="player-container" id="playerContainer">
   <video id="videoPlayer" controls></video>
 </div>
@@ -49,13 +55,21 @@ const fileInput = document.getElementById('videoFile');
 const playerContainer = document.getElementById('playerContainer');
 const videoPlayer = document.getElementById('videoPlayer');
 
+// Load video on file selection
 fileInput.addEventListener('change', () => {
   const file = fileInput.files[0];
-  if(file){
+  if (file) {
     videoPlayer.src = URL.createObjectURL(file);
     videoPlayer.play();
+
+    // Show the video container
     playerContainer.style.display = 'flex';
-    fileInput.style.alignSelf = 'flex-start'; // move input to top
+
+    // Optionally move the file input to top center
+    fileInput.style.position = 'absolute';
+    fileInput.style.top = '20px';
+    fileInput.style.left = '50%';
+    fileInput.style.transform = 'translateX(-50%)';
   }
 });
 </script>
