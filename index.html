@@ -1,35 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Flipped Media Player</title>
+<title>Flipped Player</title>
 
 <style>
 
-*{box-sizing:border-box;}
+*{
+box-sizing:border-box;
+}
 
 body{
 margin:40px;
-font-family:Arial, Helvetica, sans-serif;
+font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial;
 background:white;
-color:black;
+color:#222;
 }
 
 a.home-link{
 position:fixed;
-bottom:1rem;
-left:1rem;
+bottom:12px;
+left:12px;
 font-size:11px;
+color:#666;
 text-decoration:none;
-color:black;
-z-index:20;
-}
-
-a.home-link:hover{
-text-decoration:underline;
 }
 
 /* START SCREEN */
@@ -50,15 +48,15 @@ display:none;
 }
 
 .choose-btn-wrap label{
-padding:14px 28px;
-background:#e6e6e6;
-color:black;
+padding:12px 24px;
+background:#ececec;
+border-radius:6px;
 cursor:pointer;
 font-size:14px;
 }
 
 .choose-btn-wrap label:hover{
-background:#d8d8d8;
+background:#e2e2e2;
 }
 
 .choose-btn-wrap input{
@@ -73,7 +71,7 @@ top:40px;
 left:40px;
 right:40px;
 bottom:40px;
-background:black;
+background:#000;
 display:flex;
 align-items:center;
 justify-content:center;
@@ -93,25 +91,26 @@ transform:scaleX(-1);
 /* CONTROLS */
 
 .controls{
+
 position:absolute;
 bottom:0;
 left:0;
 right:0;
 
-height:48px;
-
-background:white;
-border-top:1px solid #ddd;
+background:rgba(255,255,255,0.95);
+border-top:1px solid #e5e5e5;
 
 display:flex;
 align-items:center;
 gap:10px;
 
-padding:0 10px;
+padding:10px 12px;
 
 opacity:0;
 pointer-events:none;
-transition:opacity .3s;
+
+transition:opacity .25s;
+
 }
 
 .controls.visible{
@@ -119,49 +118,77 @@ opacity:1;
 pointer-events:auto;
 }
 
+/* BUTTON */
+
 button{
+
 border:none;
-background:none;
+background:#f3f3f3;
+border-radius:6px;
+
+height:32px;
+min-width:32px;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
 cursor:pointer;
-font-size:14px;
+
 }
 
+button:hover{
+background:#e8e8e8;
+}
+
+svg{
+width:16px;
+height:16px;
+fill:#555;
+}
+
+/* PROGRESS */
+
 .progress-wrap{
+
 flex:1;
+
 height:6px;
+
 background:#ddd;
+border-radius:3px;
+
 cursor:pointer;
+
 }
 
 .progress-fill{
+
 height:100%;
-background:black;
+
+background:#9aa4af;
+
+border-radius:3px;
+
 width:0%;
+
 }
+
+/* TIME */
 
 .time{
 font-size:12px;
+color:#666;
 min-width:80px;
 text-align:right;
 }
 
-.vol-wrap{
-display:flex;
-align-items:center;
-gap:4px;
-}
+/* VOLUME */
 
-.vol-wrap input{
+#volume{
+
 width:70px;
-}
 
-.change-file{
-font-size:12px;
-cursor:pointer;
-}
-
-.change-file input{
-display:none;
 }
 
 /* MOBILE */
@@ -179,22 +206,18 @@ right:10px;
 bottom:10px;
 }
 
-.controls{
-height:54px;
-font-size:14px;
+.time{
+display:none;
 }
 
-.progress-wrap{
-height:8px;
-}
-
-.vol-wrap input{
-width:50px;
+#volume{
+display:none;
 }
 
 }
 
 </style>
+
 </head>
 
 <body>
@@ -206,10 +229,8 @@ Giuseppe Dicanio
 <div class="start-screen" id="startScreen">
 
 <div class="choose-btn-wrap">
-
 <label for="fileInput">Choose file</label>
 <input id="fileInput" type="file" accept="video/*">
-
 </div>
 
 </div>
@@ -220,7 +241,13 @@ Giuseppe Dicanio
 
 <div class="controls" id="controls">
 
-<button id="playBtn">▶</button>
+<button id="playBtn">
+
+<svg viewBox="0 0 24 24">
+<path d="M8 5v14l11-7z"/>
+</svg>
+
+</button>
 
 <div class="progress-wrap" id="progressWrap">
 <div class="progress-fill" id="progressFill"></div>
@@ -228,23 +255,37 @@ Giuseppe Dicanio
 
 <div class="time" id="time">0:00 / 0:00</div>
 
-<div class="vol-wrap">
+<button id="muteBtn">
 
-<button id="muteBtn">🔊</button>
+<svg viewBox="0 0 24 24">
+<path d="M4 9v6h4l5 5V4L8 9H4z"/>
+</svg>
+
+</button>
 
 <input id="volume" type="range" min="0" max="1" step="0.05" value="1">
 
-</div>
+<label>
 
-<label class="change-file">
+<input type="file" accept="video/*" id="fileInput2" hidden>
 
-file
+<button onclick="fileInput2.click()">
 
-<input type="file" accept="video/*" id="fileInput2">
+<svg viewBox="0 0 24 24">
+<path d="M12 5v14m-7-7h14"/>
+</svg>
+
+</button>
 
 </label>
 
-<button id="fullscreenBtn">⛶</button>
+<button id="fullscreenBtn">
+
+<svg viewBox="0 0 24 24">
+<path d="M7 14H5v5h5v-2H7v-3zm0-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zm-3-12v2h3v3h2V5h-5z"/>
+</svg>
+
+</button>
 
 </div>
 
@@ -292,6 +333,35 @@ showControls()
 fileInput.onchange=function(){loadFile(this.files[0])}
 fileInput2.onchange=function(){loadFile(this.files[0])}
 
+/* PLAY */
+
+function togglePlay(){
+
+if(video.paused){
+video.play()
+}else{
+video.pause()
+}
+
+}
+
+playBtn.onclick=togglePlay
+video.onclick=togglePlay
+
+/* KEYBOARD */
+
+document.addEventListener("keydown",e=>{
+
+if(e.code==="Space"){
+e.preventDefault()
+togglePlay()
+}
+
+if(e.code==="ArrowRight")video.currentTime+=5
+if(e.code==="ArrowLeft")video.currentTime-=5
+
+})
+
 /* TIME */
 
 function formatTime(s){
@@ -316,38 +386,6 @@ formatTime(video.currentTime)+" / "+formatTime(video.duration||0)
 
 video.ontimeupdate=updateUI
 video.onloadedmetadata=updateUI
-
-/* PLAY BUTTON */
-
-playBtn.onclick=togglePlay
-
-function togglePlay(){
-
-if(video.paused)video.play()
-else video.pause()
-
-}
-
-/* CLICK VIDEO */
-
-video.addEventListener("click",togglePlay)
-
-/* KEYBOARD */
-
-document.addEventListener("keydown",e=>{
-
-if(e.code==="Space"){
-
-e.preventDefault()
-togglePlay()
-
-}
-
-if(e.code==="ArrowRight")video.currentTime+=5
-
-if(e.code==="ArrowLeft")video.currentTime-=5
-
-})
 
 /* SEEK */
 
@@ -399,7 +437,7 @@ document.exitFullscreen()
 
 }
 
-/* CONTROLS AUTO HIDE */
+/* CONTROLS HIDE */
 
 function showControls(){
 
