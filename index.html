@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
   <meta charset="UTF-8" />
   <title>Flipped Media Player</title>
@@ -13,6 +13,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      font-family: Georgia, "Times New Roman", serif;
     }
     video {
       width: 100%;
@@ -22,32 +23,81 @@
       object-fit: contain;
       transform: scaleX(-1);
     }
-    label {
+    .header {
       position: fixed;
-      inset: 0;
-      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.5rem;
+      background: #fff;
+      border-bottom: 1px solid #eee;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      color: #111;
+    }
+    .file-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .file-wrap input[type="file"] {
+      font-family: inherit;
+      font-size: 0.85rem;
+      color: #111;
+    }
+    .video-wrap {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 100vw;
+      height: 100%;
+      max-height: calc(100vh - 60px);
+      margin-top: 60px;
       display: flex;
       align-items: center;
       justify-content: center;
     }
-    label input {
-      display: none;
+    a {
+      position: fixed;
+      bottom: 1rem;
+      left: 1rem;
+      z-index: 2;
+      color: #111;
+      text-decoration: none;
+      font-size: 0.9rem;
+      letter-spacing: 0.02em;
     }
+    a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
-  <label>
-    <input id="f" type="file" accept="video/*" />
-  </label>
-  <video id="v" controls playsinline></video>
+  <header class="header">
+    <h1>Flipped Media Player</h1>
+    <div class="file-wrap">
+      <input id="f" type="file" accept="video/*" />
+    </div>
+  </header>
+
+  <div class="video-wrap">
+    <video id="v" controls playsinline></video>
+  </div>
+
+  <a href="https://giuseppedicanio.github.io">Giuseppe Dicanio</a>
 
   <script>
-    document.getElementById('f').onchange = function () {
-      var f = this.files[0];
-      if (!f) return;
-      document.getElementById('v').src = URL.createObjectURL(f);
-      document.querySelector('label').style.pointerEvents = 'none';
-    };
+    document.getElementById('f').addEventListener('change', function () {
+      var file = this.files[0];
+      if (!file) return;
+      document.getElementById('v').src = URL.createObjectURL(file);
+    });
   </script>
 </body>
 </html>
