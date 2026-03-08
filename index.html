@@ -1,1 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Flipped Media Player</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #050510;
+      --panel: #111225;
+      --accent: #ff5c9a;
+      --accent-soft: rgba(255, 92, 154, 0.2);
+      --text: #f5f5ff;
+      --muted: #a0a0c0;
+    }
 
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at top, #281b45 0, #050510 55%);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+    }
+
+    .shell {
+      width: min(960px, 100vw - 2rem);
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.04), rgba(0, 0, 0, 0.6));
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow:
+        0 30px 80px rgba(0, 0, 0, 0.7),
+        0 0 0 1px rgba(255, 255, 255, 0.02);
+      backdrop-filter: blur(26px);
+      padding: 1.5rem 1.75rem 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .title {
+      font-size: clamp(1.4rem, 1.7vw + 1rem, 1.8rem);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .title span {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: var(--muted);
+      max-width: 22rem;
+    }
+
+    .controls-row {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .upload-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    label[for="fileInput"] {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.55rem 1rem;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 0.9rem;
+      cursor: pointer;
+      border: 1px solid rgba(255, 92, 154, 0.35);
+      transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3);
+    }
+
+    label[for="fileInput"]:hover {
+      background: rgba(255, 92, 154, 0.3);
+      transform: translateY(-1px);
+      box-shadow:
+        0 8px 20px rgba(0, 0, 0, 0.7),
+        0 0 0 1px rgba(255, 255, 255, 0.04);
+    }
+
+    label[for="fileInput"]:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    #fileInput {
+      display: none;
+    }
+
+    .file-name {
+      font-size: 0.8rem;
+      color: var(--muted);
+      max-width: 220px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .toggle-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.2rem;
+      background: rgba(4, 4, 20, 0.9);
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .toggle-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      padding: 0 0.25rem 0 0.55rem;
+      white-space: nowrap;
+    }
+
+    .toggle-btn {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.78rem;
+      padding: 0.3rem 0.6rem;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background 0.16s ease, color 0.16s ease;
+      white-space: nowrap;
+    }
+
+    .toggle-btn.active {
+      background: var(--accent);
+      color: #050510;
+      font-weight: 600;
+    }
+
+    .player-shell {
+      border-radius: 18px;
+      background: radial-gradient(circle at top, #222546 0, #050510 60%);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      overflow: hidden;
+      aspect-ratio: 16 / 9;
+      position: relative;
+    }
+
+    .player-frame {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 0.75rem;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      max-height: 100%;
+      border-radius: 14px;
+      background: #000;
+      object-fit: contain;
+      transform-origin: center center;
+      transition: transform 0.25s ease;
+    }
+
+    .hint {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+      text-align: center;
+      padding: 1.5rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .hint span {
+      display: inline-flex;
+      padding: 0.3rem 0.9rem;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px dashed rgba(255, 255, 255, 0.15);
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+      flex-wrap: wrap;
+    }
+
+    .footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 640px) {
+      .shell {
+        padding: 1.1rem 1.1rem 1.4rem;
+      }
+
+      .controls-row {
+        align-items: flex-start;
+      }
+
+      .player-shell {
+        aspect-ratio: 3 / 4;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="header">
+      <div>
+        <div class="title"><span>Flipped</span> Video Room</div>
+        <div class="subtitle">Drop in any video. It stays on your device and plays flipped in real time.</div>
+      </div>
+    </div>
+
+    <div class="controls-row">
+      <div class="upload-group">
+        <label for="fileInput">
+          ✶ Choose a video
+        </label>
+        <input
+          id="fileInput"
+          type="file"
+          accept="video/*"
+        />
+        <div id="fileName" class="file-name">No file selected yet</div>
+      </div>
+
+      <div class="toggle-group" aria-label="Flip mode">
+        <span class="toggle-label">Flip</span>
+        <button class="toggle-btn active" data-mode="horizontal">Horizontal</button>
+        <button class="toggle-btn" data-mode="vertical">Vertical</button>
+        <button class="toggle-btn" data-mode="both">Both</button>
+      </div>
+    </div>
+
+    <div class="player-shell">
+      <div class="player-frame">
+        <video id="video" controls playsinline></video>
+        <div id="hint" class="hint">
+          <span>Select a video file to begin.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>Files never leave your device. All magic happens in your browser.</span>
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const video = document.getElementById('video');
+    const fileNameLabel = document.getElementById('fileName');
+    const hint = document.getElementById('hint');
+    const toggleButtons = document.querySelectorAll('.toggle-btn');
+
+    let currentFlip = 'horizontal';
+
+    function applyFlip() {
+      switch (currentFlip) {
+        case 'horizontal':
+          video.style.transform = 'scaleX(-1)';
+          break;
+        case 'vertical':
+          video.style.transform = 'scaleY(-1)';
+          break;
+        case 'both':
+          video.style.transform = 'scale(-1, -1)';
+          break;
+        default:
+          video.style.transform = 'none';
+      }
+    }
+
+    toggleButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        toggleButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFlip = btn.dataset.mode;
+        applyFlip();
+      });
+    });
+
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      // Update label
+      fileNameLabel.textContent = file.name;
+
+      // Create object URL and load video
+      const url = URL.createObjectURL(file);
+      video.src = url;
+
+      // hide hint once we have a video
+      hint.style.display = 'none';
+
+      video.addEventListener('loadedmetadata', () => {
+        video.play().catch(() => {
+          // Autoplay might be blocked; controls are visible anyway
+        });
+      }, { once: true });
+
+      applyFlip();
+    });
+  </script>
+</body>
+</html>
