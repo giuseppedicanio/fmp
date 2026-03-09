@@ -2,6 +2,7 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Flipped Video Player</title>
   <style>
     * {
@@ -12,19 +13,22 @@
       margin: 0;
       padding: 0;
       height: 100%;
+      width: 100%;
       background: #000;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       color: #e5e7eb;
+      overscroll-behavior: none;
     }
 
     body {
       overflow: hidden;
     }
 
-    /* Il player occupa SEMPRE tutto il viewport */
+    /* Player sempre a tutto schermo, con safe-area per notch / gesture bar */
     .player-wrapper {
       position: fixed;
-      inset: 0;
+      inset: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0)
+             env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
       display: flex;
       flex-direction: column;
       background: #000;
@@ -32,10 +36,13 @@
 
     #videoInput {
       position: fixed;
-      top: 16px;
-      left: 16px;
+      top: calc(8px + env(safe-area-inset-top, 0));
+      left: calc(8px + env(safe-area-inset-left, 0));
       z-index: 20;
       color: #e5e7eb;
+      font-size: 12px;
+      max-width: 60vw;
+      opacity: 0.9;
     }
 
     video {
@@ -46,6 +53,7 @@
       background: #000;
       transform: scaleX(-1); /* video flippato */
       display: block;
+      touch-action: manipulation;
     }
 
     .controls {
@@ -54,6 +62,7 @@
       align-items: center;
       gap: 8px;
       padding: 6px 10px;
+      padding-bottom: calc(6px + env(safe-area-inset-bottom, 0));
       background: rgba(15, 23, 42, 0.95);
       border-top: 1px solid #1f2937;
       font-size: 12px;
@@ -67,6 +76,7 @@
       border-radius: 4px;
       cursor: pointer;
       font-size: 12px;
+      white-space: nowrap;
     }
 
     .btn:active {
@@ -88,6 +98,7 @@
       display: flex;
       align-items: center;
       gap: 4px;
+      min-width: 0;
     }
 
     .progress {
@@ -159,6 +170,40 @@
       font-size: 10px;
       opacity: 0.7;
     }
+
+    /* Layout adattato per schermi piccoli (telefoni) */
+    @media (max-width: 640px) {
+      #videoInput {
+        font-size: 11px;
+        max-width: 70vw;
+      }
+
+      .controls {
+        padding: 6px 8px;
+        gap: 6px;
+        font-size: 11px;
+      }
+
+      .btn {
+        padding: 4px 6px;
+        font-size: 11px;
+      }
+
+      .time {
+        font-size: 11px;
+      }
+
+      .volume {
+        width: 60px;
+      }
+    }
+
+    /* Schermi molto stretti: comprimiamo testi */
+    @media (max-width: 420px) {
+      #duration {
+        display: none; /* si può togliere se vuoi vederlo sempre */
+      }
+    }
   </style>
 </head>
 <body>
@@ -197,6 +242,7 @@
     const fsIndicator = document.getElementById('fsIndicator');
 
     let currentObjectUrl = null;
+    let lastTap = 0;
 
     function formatTime(sec) {
       if (!isFinite(sec)) return '00:00';
@@ -276,6 +322,15 @@
     }
 
     fullscreenBtn.addEventListener('click', toggleFullscreen);
+
+    // Doppio click / doppio tap sul video per fullscreen
+    player.addEventListener('click', (e) => {
+      const now = Date.now();
+      if (now - lastTap < 300) {
+        toggleFullscreen();
+      }
+      lastTap = now;
+    });
 
     document.addEventListener('fullscreenchange', () => {
       const isFs = !!document.fullscreenElement;
