@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Flipped Video Player (File o Link)</title>
+  <title>Flipped Video Player (File, Link, YouTube)</title>
   <style>
     body {
       margin: 0;
@@ -58,7 +58,8 @@
       width: 100%;
     }
 
-    #player-container {
+    /* Player per file/link diretto (tag <video>) */
+    #video-player-container {
       margin-top: 10px;
       max-width: 800px;
       width: 100%;
@@ -118,14 +119,12 @@
       cursor: pointer;
     }
 
-    /* WebKit (Chrome, Edge, Safari) traccia */
     input[type="range"]::-webkit-slider-runnable-track {
       height: 6px;
       background: transparent;
       border-radius: 0;
     }
 
-    /* WebKit thumb invisibile */
     input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
@@ -136,21 +135,18 @@
       margin-top: 0;
     }
 
-    /* Firefox traccia */
     input[type="range"]::-moz-range-track {
       height: 6px;
       background: transparent;
       border-radius: 0;
     }
 
-    /* Firefox riempimento */
     input[type="range"]::-moz-range-progress {
       height: 6px;
       background: #000;
       border-radius: 0;
     }
 
-    /* Firefox thumb invisibile */
     input[type="range"]::-moz-range-thumb {
       width: 0;
       height: 0;
@@ -158,7 +154,6 @@
       border: none;
     }
 
-    /* IE/Edge legacy traccia */
     input[type="range"]::-ms-track {
       height: 6px;
       background: transparent;
@@ -176,12 +171,44 @@
       border-radius: 0;
     }
 
-    /* IE/Edge thumb invisibile */
     input[type="range"]::-ms-thumb {
       width: 0;
       height: 0;
       background: transparent;
       border: none;
+    }
+
+    /* Player per link YouTube (iframe) */
+    #yt-player-container {
+      margin-top: 10px;
+      max-width: 800px;
+      width: 100%;
+      display: none;
+    }
+
+    .yt-wrapper {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%; /* 16:9 */
+      background: #000;
+      overflow: hidden;
+    }
+
+    #yt-frame {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      transform: scaleX(-1); /* flip video + controlli YouTube */
+      transform-origin: center;
+    }
+
+    .yt-note {
+      font-size: 12px;
+      color: #444;
+      margin-top: 4px;
     }
   </style>
 </head>
@@ -192,14 +219,14 @@
     <input type="file" id="file-input" accept="video/*" />
   </div>
 
-  <!-- Sorgente 2: link diretto a video -->
+  <!-- Sorgente 2: link (YouTube o file diretto) -->
   <div class="source-section">
-    <strong>2. Oppure inserisci un link video (file diretto, es. .mp4 / .webm)</strong>
+    <strong>2. Oppure inserisci un link video (YouTube o file diretto)</strong>
     <div class="source-row">
       <input
         type="text"
         id="video-url-input"
-        placeholder="Es. https://esempio.com/video.mp4"
+        placeholder="Es. link YouTube https://www.youtube.com/watch?v=... oppure https://esempio.com/video.mp4"
       />
       <button id="load-link-btn">Load</button>
     </div>
@@ -207,7 +234,8 @@
 
   <div id="error"></div>
 
-  <div id="player-container">
+  <!-- Player per file locale o link diretto (tag <video>) -->
+  <div id="video-player-container">
     <div class="video-wrapper">
       <video id="video" playsinline></video>
     </div>
@@ -222,22 +250,40 @@
     </div>
   </div>
 
+  <!-- Player per link YouTube (iframe) -->
+  <div id="yt-player-container">
+    <div class="yt-wrapper">
+      <iframe
+        id="yt-frame"
+        src=""
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen
+      ></iframe>
+    </div>
+    <div class="yt-note">
+      Questo è il player YouTube originale, solo flippato. I tasti spazio/click del tuo player funzionano solo per i file/caricamenti diretti.
+    </div>
+  </div>
+
   <script>
     const fileInput = document.getElementById('file-input');
     const urlInput = document.getElementById('video-url-input');
     const loadLinkBtn = document.getElementById('load-link-btn');
     const errorEl = document.getElementById('error');
 
-    const playerContainer = document.getElementById('player-container');
+    const videoPlayerContainer = document.getElementById('video-player-container');
+    const ytPlayerContainer = document.getElementById('yt-player-container');
     const video = document.getElementById('video');
     const playPauseBtn = document.getElementById('play-pause');
     const timeDisplay = document.getElementById('time-display');
     const seekBar = document.getElementById('seek-bar');
     const volumeSlider = document.getElementById('volume');
+    const ytFrame = document.getElementById('yt-frame');
 
-    let videoURLObject = null;   // per URL.createObjectURL
+    let videoURLObject = null;
     let seekingByUser = false;
 
+    // --- Utility tempo ---
     function formatTime(seconds) {
       if (isNaN(seconds) || !isFinite(seconds)) return '0:00';
       const m = Math.floor(seconds / 60);
@@ -245,6 +291,13 @@
       return m + ':' + (s < 10 ? '0' + s : s);
     }
 
+    function updateTimeDisplay() {
+      const current = video.currentTime || 0;
+      const duration = video.duration || 0;
+      timeDisplay.textContent = `${formatTime(current)} / ${formatTime(duration)}`;
+    }
+
+    // --- Slider UI ---
     function updateSeekBarBackground(percent) {
       seekBar.style.background =
         `linear-gradient(to right, #000 0%, #000 ${percent}%, #ddd ${percent}%, #ddd 100%)`;
@@ -255,13 +308,7 @@
         `linear-gradient(to right, #000 0%, #000 ${percent}%, #ddd ${percent}%, #ddd 100%)`;
     }
 
-    function updateTimeDisplay() {
-      const current = video.currentTime || 0;
-      const duration = video.duration || 0;
-      timeDisplay.textContent = `${formatTime(current)} / ${formatTime(duration)}`;
-    }
-
-    function resetPlayerUI() {
+    function resetVideoPlayerUI() {
       seekBar.value = 0;
       updateSeekBarBackground(0);
       updateVolumeBackground(volumeSlider.value * 100);
@@ -269,10 +316,38 @@
       playPauseBtn.textContent = 'Play';
     }
 
+    // --- Riconoscimento URL YouTube ---
+    function getYouTubeId(url) {
+      try {
+        const u = new URL(url.trim());
+        if (u.hostname.includes('youtube.com')) {
+          if (u.pathname === '/watch') {
+            return u.searchParams.get('v');
+          }
+          const parts = u.pathname.split('/');
+          const last = parts[parts.length - 1];
+          if (last) return last;
+        }
+        if (u.hostname.includes('youtu.be')) {
+          const parts = u.pathname.split('/');
+          const last = parts[parts.length - 1];
+          if (last) return last;
+        }
+      } catch (e) {
+        return null;
+      }
+      return null;
+    }
+
+    // --- Caricamento video da file ---
     function loadVideoFromFile(file) {
       if (!file) return;
 
-      // rilascia vecchio object URL, se c'è
+      // nascondi player YT
+      ytPlayerContainer.style.display = 'none';
+      ytFrame.src = '';
+
+      // rilascia vecchio object URL
       if (videoURLObject) {
         URL.revokeObjectURL(videoURLObject);
         videoURLObject = null;
@@ -283,33 +358,58 @@
       video.src = objectUrl;
       video.load();
 
-      playerContainer.style.display = 'block';
+      videoPlayerContainer.style.display = 'block';
       errorEl.textContent = '';
-      resetPlayerUI();
+      resetVideoPlayerUI();
     }
 
-    function loadVideoFromLink(url) {
-      const trimmed = url.trim();
+    // --- Caricamento da link (YouTube o diretto) ---
+    function loadVideoFromLink(rawUrl) {
+      const trimmed = rawUrl.trim();
       if (!trimmed) {
         errorEl.textContent = 'Inserisci un link video.';
         return;
       }
 
-      // disattiva eventuale vecchio object URL
-      if (videoURLObject) {
-        URL.revokeObjectURL(videoURLObject);
-        videoURLObject = null;
+      const ytId = getYouTubeId(trimmed);
+
+      if (ytId) {
+        // --- Link YouTube ---
+        // nascondi player <video>
+        videoPlayerContainer.style.display = 'none';
+        // stop e pulisci <video>
+        video.pause();
+        video.removeAttribute('src');
+        video.load();
+        if (videoURLObject) {
+          URL.revokeObjectURL(videoURLObject);
+          videoURLObject = null;
+        }
+
+        const embedUrl = `https://www.youtube.com/embed/${ytId}?rel=0&playsinline=1`;
+        ytFrame.src = embedUrl;
+        ytPlayerContainer.style.display = 'block';
+        errorEl.textContent = '';
+      } else {
+        // --- Link diretto a file video ---
+        ytPlayerContainer.style.display = 'none';
+        ytFrame.src = '';
+
+        if (videoURLObject) {
+          URL.revokeObjectURL(videoURLObject);
+          videoURLObject = null;
+        }
+
+        video.src = trimmed;
+        video.load();
+
+        videoPlayerContainer.style.display = 'block';
+        errorEl.textContent = '';
+        resetVideoPlayerUI();
       }
-
-      // qui assumiamo che sia un link diretto ad un file video (mp4, webm, ecc.)
-      video.src = trimmed;
-      video.load();
-
-      playerContainer.style.display = 'block';
-      errorEl.textContent = '';
-      resetPlayerUI();
     }
 
+    // --- Play/Pausa per <video> ---
     function togglePlayPause() {
       if (!video.src) return;
       if (video.paused) {
@@ -336,7 +436,7 @@
       }
     });
 
-    // --- Eventi video / controlli ---
+    // --- Eventi video locale/diretto ---
     video.addEventListener('loadedmetadata', () => {
       updateTimeDisplay();
     });
@@ -358,7 +458,7 @@
       togglePlayPause();
     });
 
-    // barra spaziatrice -> play/pausa
+    // barra spaziatrice -> play/pausa SOLO per il player <video>
     document.addEventListener('keydown', (event) => {
       const active = document.activeElement;
       const isTypingElement =
@@ -367,12 +467,15 @@
       if (isTypingElement) return;
 
       if (event.code === 'Space' || event.key === ' ') {
-        event.preventDefault();
-        togglePlayPause();
+        // se è visibile il player <video>, controlliamo quello
+        if (videoPlayerContainer.style.display !== 'none') {
+          event.preventDefault();
+          togglePlayPause();
+        }
       }
     });
 
-    // aggiornamento tempo e barra durante la riproduzione
+    // aggiornamento tempo e barra durante riproduzione
     video.addEventListener('timeupdate', () => {
       if (!seekingByUser) {
         const current = video.currentTime;
