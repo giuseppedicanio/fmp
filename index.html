@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Video Player</title>
+  <title>Flipped Video Player (File o Link)</title>
   <style>
     body {
       margin: 0;
@@ -16,8 +16,50 @@
       box-sizing: border-box;
     }
 
+    .source-section {
+      width: 100%;
+      max-width: 800px;
+      margin-bottom: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 14px;
+    }
+
+    .source-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 6px 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    #load-link-btn {
+      padding: 6px 10px;
+      border: 1px solid #ccc;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    #load-link-btn:hover {
+      background: #f0f0f0;
+    }
+
+    #error {
+      color: red;
+      min-height: 18px;
+      font-size: 13px;
+      max-width: 800px;
+      width: 100%;
+    }
+
     #player-container {
-      margin-top: 20px;
+      margin-top: 10px;
       max-width: 800px;
       width: 100%;
       display: none;
@@ -31,7 +73,7 @@
     video {
       width: 100%;
       display: block;
-      transform: scaleX(-1);
+      transform: scaleX(-1);  /* sempre flippato */
       background: #000;
       cursor: pointer;
     }
@@ -65,25 +107,25 @@
       font-size: 14px;
     }
 
-    /* Slider base: striscia senza pallina, SPIGOLI NETTI */
+    /* Slider: striscia dritta, senza pallina visibile */
     input[type="range"] {
       -webkit-appearance: none;
       appearance: none;
       height: 6px;
       background: #ddd;
-      border-radius: 0;   /* niente arrotondamento */
+      border-radius: 0;
       outline: none;
       cursor: pointer;
     }
 
-    /* WebKit (Chrome, Edge, Safari, Opera) - traccia */
+    /* WebKit (Chrome, Edge, Safari) traccia */
     input[type="range"]::-webkit-slider-runnable-track {
       height: 6px;
       background: transparent;
-      border-radius: 0;   /* niente arrotondamento */
+      border-radius: 0;
     }
 
-    /* WebKit - pallina invisibile */
+    /* WebKit thumb invisibile */
     input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
@@ -94,21 +136,21 @@
       margin-top: 0;
     }
 
-    /* Firefox - traccia */
+    /* Firefox traccia */
     input[type="range"]::-moz-range-track {
       height: 6px;
       background: transparent;
-      border-radius: 0;   /* niente arrotondamento */
+      border-radius: 0;
     }
 
-    /* Firefox - riempimento */
+    /* Firefox riempimento */
     input[type="range"]::-moz-range-progress {
       height: 6px;
       background: #000;
-      border-radius: 0;   /* niente arrotondamento */
+      border-radius: 0;
     }
 
-    /* Firefox - pallina invisibile */
+    /* Firefox thumb invisibile */
     input[type="range"]::-moz-range-thumb {
       width: 0;
       height: 0;
@@ -116,7 +158,7 @@
       border: none;
     }
 
-    /* IE/Edge legacy - traccia */
+    /* IE/Edge legacy traccia */
     input[type="range"]::-ms-track {
       height: 6px;
       background: transparent;
@@ -126,15 +168,15 @@
 
     input[type="range"]::-ms-fill-lower {
       background: #000;
-      border-radius: 0;   /* niente arrotondamento */
+      border-radius: 0;
     }
 
     input[type="range"]::-ms-fill-upper {
       background: #ddd;
-      border-radius: 0;   /* niente arrotondamento */
+      border-radius: 0;
     }
 
-    /* IE/Edge - pallina invisibile */
+    /* IE/Edge thumb invisibile */
     input[type="range"]::-ms-thumb {
       width: 0;
       height: 0;
@@ -144,7 +186,26 @@
   </style>
 </head>
 <body>
-  <input type="file" id="file-input" accept="video/*" />
+  <!-- Sorgente 1: file locale -->
+  <div class="source-section">
+    <strong>1. Carica un tuo file video</strong>
+    <input type="file" id="file-input" accept="video/*" />
+  </div>
+
+  <!-- Sorgente 2: link diretto a video -->
+  <div class="source-section">
+    <strong>2. Oppure inserisci un link video (file diretto, es. .mp4 / .webm)</strong>
+    <div class="source-row">
+      <input
+        type="text"
+        id="video-url-input"
+        placeholder="Es. https://esempio.com/video.mp4"
+      />
+      <button id="load-link-btn">Load</button>
+    </div>
+  </div>
+
+  <div id="error"></div>
 
   <div id="player-container">
     <div class="video-wrapper">
@@ -163,6 +224,10 @@
 
   <script>
     const fileInput = document.getElementById('file-input');
+    const urlInput = document.getElementById('video-url-input');
+    const loadLinkBtn = document.getElementById('load-link-btn');
+    const errorEl = document.getElementById('error');
+
     const playerContainer = document.getElementById('player-container');
     const video = document.getElementById('video');
     const playPauseBtn = document.getElementById('play-pause');
@@ -170,7 +235,7 @@
     const seekBar = document.getElementById('seek-bar');
     const volumeSlider = document.getElementById('volume');
 
-    let videoURL = null;
+    let videoURLObject = null;   // per URL.createObjectURL
     let seekingByUser = false;
 
     function formatTime(seconds) {
@@ -181,17 +246,68 @@
     }
 
     function updateSeekBarBackground(percent) {
-      seekBar.style.background = `linear-gradient(to right, #000 0%, #000 ${percent}%, #ddd ${percent}%, #ddd 100%)`;
+      seekBar.style.background =
+        `linear-gradient(to right, #000 0%, #000 ${percent}%, #ddd ${percent}%, #ddd 100%)`;
     }
 
     function updateVolumeBackground(percent) {
-      volumeSlider.style.background = `linear-gradient(to right, #000 0%, #000 ${percent}%, #ddd ${percent}%, #ddd 100%)`;
+      volumeSlider.style.background =
+        `linear-gradient(to right, #000 0%, #000 ${percent}%, #ddd ${percent}%, #ddd 100%)`;
     }
 
     function updateTimeDisplay() {
       const current = video.currentTime || 0;
       const duration = video.duration || 0;
       timeDisplay.textContent = `${formatTime(current)} / ${formatTime(duration)}`;
+    }
+
+    function resetPlayerUI() {
+      seekBar.value = 0;
+      updateSeekBarBackground(0);
+      updateVolumeBackground(volumeSlider.value * 100);
+      updateTimeDisplay();
+      playPauseBtn.textContent = 'Play';
+    }
+
+    function loadVideoFromFile(file) {
+      if (!file) return;
+
+      // rilascia vecchio object URL, se c'è
+      if (videoURLObject) {
+        URL.revokeObjectURL(videoURLObject);
+        videoURLObject = null;
+      }
+
+      const objectUrl = URL.createObjectURL(file);
+      videoURLObject = objectUrl;
+      video.src = objectUrl;
+      video.load();
+
+      playerContainer.style.display = 'block';
+      errorEl.textContent = '';
+      resetPlayerUI();
+    }
+
+    function loadVideoFromLink(url) {
+      const trimmed = url.trim();
+      if (!trimmed) {
+        errorEl.textContent = 'Inserisci un link video.';
+        return;
+      }
+
+      // disattiva eventuale vecchio object URL
+      if (videoURLObject) {
+        URL.revokeObjectURL(videoURLObject);
+        videoURLObject = null;
+      }
+
+      // qui assumiamo che sia un link diretto ad un file video (mp4, webm, ecc.)
+      video.src = trimmed;
+      video.load();
+
+      playerContainer.style.display = 'block';
+      errorEl.textContent = '';
+      resetPlayerUI();
     }
 
     function togglePlayPause() {
@@ -203,27 +319,24 @@
       }
     }
 
+    // --- Eventi sorgenti ---
     fileInput.addEventListener('change', () => {
       const file = fileInput.files[0];
       if (!file) return;
-
-      if (videoURL) {
-        URL.revokeObjectURL(videoURL);
-      }
-
-      videoURL = URL.createObjectURL(file);
-      video.src = videoURL;
-      video.load();
-
-      playerContainer.style.display = 'block';
-      playPauseBtn.textContent = 'Play';
-
-      seekBar.value = 0;
-      updateSeekBarBackground(0);
-      updateVolumeBackground(volumeSlider.value * 100);
-      updateTimeDisplay();
+      loadVideoFromFile(file);
     });
 
+    loadLinkBtn.addEventListener('click', () => {
+      loadVideoFromLink(urlInput.value);
+    });
+
+    urlInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        loadVideoFromLink(urlInput.value);
+      }
+    });
+
+    // --- Eventi video / controlli ---
     video.addEventListener('loadedmetadata', () => {
       updateTimeDisplay();
     });
@@ -240,10 +353,12 @@
       playPauseBtn.textContent = 'Play';
     });
 
+    // click sul video -> play/pausa
     video.addEventListener('click', () => {
       togglePlayPause();
     });
 
+    // barra spaziatrice -> play/pausa
     document.addEventListener('keydown', (event) => {
       const active = document.activeElement;
       const isTypingElement =
@@ -257,6 +372,7 @@
       }
     });
 
+    // aggiornamento tempo e barra durante la riproduzione
     video.addEventListener('timeupdate', () => {
       if (!seekingByUser) {
         const current = video.currentTime;
@@ -268,6 +384,7 @@
       }
     });
 
+    // seek bar
     seekBar.addEventListener('input', () => {
       seekingByUser = true;
       const duration = video.duration || 0;
@@ -283,11 +400,13 @@
       seekingByUser = false;
     });
 
+    // volume
     volumeSlider.addEventListener('input', () => {
       video.volume = volumeSlider.value;
       updateVolumeBackground(volumeSlider.value * 100);
     });
 
+    // inizializza barra volume
     updateVolumeBackground(volumeSlider.value * 100);
   </script>
 </body>
