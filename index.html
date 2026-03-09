@@ -21,11 +21,6 @@
       max-width: 800px;
       width: 100%;
       display: none; /* nascosto finché non scegli il file */
-      transition: max-width 0.2s ease;
-    }
-
-    #player-container.large {
-      max-width: 1200px; /* versione più grande */
     }
 
     .video-wrapper {
@@ -38,6 +33,7 @@
       display: block;
       transform: scaleX(-1); /* video sempre capovolto */
       background: #000;
+      cursor: pointer;
     }
 
     .controls {
@@ -52,7 +48,8 @@
 
     button {
       padding: 6px 10px;
-      border: 1px solid #ccc;
+      border: none;        /* niente contorno */
+      outline: none;       /* niente contorno focus */
       background: #fff;
       cursor: pointer;
     }
@@ -62,9 +59,10 @@
     }
 
     .time-display {
-      min-width: 70px;
+      min-width: 110px;
       text-align: center;
-      font-family: monospace;
+      font-family: "Consolas", "Courier New", monospace; /* font diverso */
+      font-size: 14px;
     }
 
     /* Slider base: striscia senza pallina visibile */
@@ -155,13 +153,11 @@
     <div class="controls">
       <button id="play-pause">Play</button>
 
-      <div class="time-display" id="time-display">0:00</div>
+      <div class="time-display" id="time-display">0:00 / 0:00</div>
 
       <input type="range" id="seek-bar" min="0" max="100" value="0" style="flex: 1;" />
 
       <input type="range" id="volume" min="0" max="1" step="0.01" value="1" style="width: 120px;" />
-
-      <button id="size-toggle">Bigger</button>
     </div>
   </div>
 
@@ -173,14 +169,13 @@
     const timeDisplay = document.getElementById('time-display');
     const seekBar = document.getElementById('seek-bar');
     const volumeSlider = document.getElementById('volume');
-    const sizeToggleBtn = document.getElementById('size-toggle');
 
     let videoURL = null;
     let seekingByUser = false;
 
     // Format seconds to M:SS
     function formatTime(seconds) {
-      if (isNaN(seconds)) return '0:00';
+      if (isNaN(seconds) || !isFinite(seconds)) return '0:00';
       const m = Math.floor(seconds / 60);
       const s = Math.floor(seconds % 60);
       return m + ':' + (s < 10 ? '0' + s : s);
@@ -188,12 +183,26 @@
 
     // Aggiorna sfondo slider (riempimento) in base alla percentuale
     function updateSeekBarBackground(percent) {
-      // fallback semplice: gradiente per browser WebKit/moderni
       seekBar.style.background = `linear-gradient(to right, #000 0%, #000 ${percent}%, #ddd ${percent}%, #ddd 100%)`;
     }
 
     function updateVolumeBackground(percent) {
       volumeSlider.style.background = `linear-gradient(to right, #000 0%, #000 ${percent}%, #ddd ${percent}%, #ddd 100%)`;
+    }
+
+    function updateTimeDisplay() {
+      const current = video.currentTime || 0;
+      const duration = video.duration || 0;
+      timeDisplay.textContent = `${formatTime(current)} / ${formatTime(duration)}`;
+    }
+
+    function togglePlayPause() {
+      if (!video.src) return;
+      if (video.paused) {
+        video.play();
+      } else {
+        video.pause();
+      }
     }
 
     fileInput.addEventListener('change', () => {
@@ -214,15 +223,16 @@
       seekBar.value = 0;
       updateSeekBarBackground(0);
       updateVolumeBackground(volumeSlider.value * 100);
+      updateTimeDisplay();
+    });
+
+    video.addEventListener('loadedmetadata', () => {
+      // quando conosciamo la durata, aggiorniamo il display
+      updateTimeDisplay();
     });
 
     playPauseBtn.addEventListener('click', () => {
-      if (!video.src) return;
-      if (video.paused) {
-        video.play();
-      } else {
-        video.pause();
-      }
+      togglePlayPause();
     });
 
     video.addEventListener('play', () => {
@@ -233,17 +243,35 @@
       playPauseBtn.textContent = 'Play';
     });
 
+    // Click sul video per play/pausa
+    video.addEventListener('click', () => {
+      togglePlayPause();
+    });
+
+    // Barra spaziatrice per play/pausa
+    document.addEventListener('keydown', (event) => {
+      // Evita di fermare la scrittura se un input è attivo
+      const active = document.activeElement;
+      const isTypingElement =
+        active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA');
+
+      if (isTypingElement) return;
+
+      if (event.code === 'Space' || event.key === ' ') {
+        event.preventDefault();
+        togglePlayPause();
+      }
+    });
+
     // Aggiorna tempo e barra mentre il video va
     video.addEventListener('timeupdate', () => {
       if (!seekingByUser) {
         const current = video.currentTime;
         const duration = video.duration || 0;
-        timeDisplay.textContent = formatTime(current);
-        if (duration > 0) {
-          const percent = (current / duration) * 100;
-          seekBar.value = percent;
-          updateSeekBarBackground(percent);
-        }
+        const percent = duration > 0 ? (current / duration) * 100 : 0;
+        seekBar.value = percent;
+        updateSeekBarBackground(percent);
+        updateTimeDisplay();
       }
     });
 
@@ -256,6 +284,7 @@
       if (duration > 0) {
         video.currentTime = (value / 100) * duration;
       }
+      updateTimeDisplay();
     });
 
     seekBar.addEventListener('change', () => {
@@ -270,14 +299,6 @@
 
     // Inizializza sfondo volume
     updateVolumeBackground(volumeSlider.value * 100);
-
-    // Bottone per ingrandire/rimpicciolire il player (non full screen)
-    sizeToggleBtn.addEventListener('click', () => {
-      playerContainer.classList.toggle('large');
-      sizeToggleBtn.textContent = playerContainer.classList.contains('large')
-        ? 'Smaller'
-        : 'Bigger';
-    });
   </script>
 </body>
 </html>
