@@ -7,7 +7,6 @@
   <style>
     :root {
       --accent: #111;
-      --accent-light: #777;
       --border: #e0e0e0;
     }
 
@@ -42,7 +41,6 @@
       gap: 18px;
     }
 
-    /* Pulsante upload rotondo in alto */
     .top-row {
       display: flex;
       justify-content: flex-start;
@@ -146,7 +144,6 @@
       align-items: center;
       gap: 10px;
       padding: 0 4px;
-      font-size: 12px;
       user-select: none;
     }
 
@@ -164,7 +161,6 @@
       gap: 10px;
     }
 
-    /* Pulsante play/pause rotondo */
     .ctrl-circle {
       width: 28px;
       height: 28px;
@@ -189,7 +185,6 @@
       transform: translateY(1px);
     }
 
-    /* Icona play (triangolo) di default */
     #playPauseBtn::before {
       content: "";
       border-style: solid;
@@ -198,7 +193,6 @@
       margin-left: 2px;
     }
 
-    /* Icona pausa (due barre) quando in riproduzione */
     #playPauseBtn.is-playing::before,
     #playPauseBtn.is-playing::after {
       content: "";
@@ -216,14 +210,14 @@
       margin-left: 2px;
     }
 
-    /* Slider progresso */
+    /* BARRA SEMPLICE */
     input[type="range"] {
       -webkit-appearance: none;
       appearance: none;
       width: 100%;
-      height: 4px;
+      height: 2px;
       border-radius: 999px;
-      background: #e6e6e6;
+      background: #e2e2e2;
       outline: none;
       cursor: pointer;
     }
@@ -231,17 +225,17 @@
     input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      width: 14px;
-      height: 14px;
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
       background: #111;
       cursor: pointer;
-      margin-top: -5px;
+      margin-top: -4px;
     }
 
     input[type="range"]::-moz-range-thumb {
-      width: 14px;
-      height: 14px;
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
       background: #111;
       cursor: pointer;
@@ -249,17 +243,15 @@
     }
 
     input[type="range"]::-moz-range-track {
-      background: #e6e6e6;
-      height: 4px;
+      background: #e2e2e2;
+      height: 2px;
       border-radius: 999px;
     }
 
-    /* Volume slider un po' più corto */
     #volume {
       max-width: 80px;
     }
 
-    /* Pulsante full screen: quadrato vuoto */
     #fsBtn {
       width: 24px;
       height: 24px;
@@ -360,11 +352,6 @@
 
     let objectUrl = null;
     let isSeeking = false;
-
-    function formatTime(seconds) {
-      if (!isFinite(seconds)) return 0;
-      return seconds;
-    }
 
     uploadBtn.addEventListener("click", () => {
       fileInput.click();
