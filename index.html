@@ -4,15 +4,19 @@
   <meta charset="UTF-8" />
   <title>Flipped Video Player</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       margin: 0;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
       background: #0f172a;
-      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #e5e7eb;
     }
 
     #videoInput {
@@ -20,32 +24,185 @@
       top: 16px;
       left: 16px;
       color: #e5e7eb;
+      z-index: 10;
     }
 
-    video {
+    .player-wrapper {
+      position: relative;
       max-width: 90vw;
       max-height: 80vh;
       background: #020617;
       border-radius: 0.75rem;
+      overflow: hidden;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
-      transform: scaleX(-1); /* video flippato */
+      display: flex;
+      flex-direction: column;
     }
 
-    /* Prova a “sflippare” solo la barra dei controlli (soprattutto Chrome/Edge) */
-    video::-webkit-media-controls-panel {
-      transform: scaleX(-1);
+    video {
+      width: 100%;
+      height: auto;
+      max-height: calc(80vh - 48px);
+      display: block;
+      transform: scaleX(-1); /* video flippato */
+      background: black;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      background: rgba(15, 23, 42, 0.95);
+      border-top: 1px solid #1f2937;
+      font-size: 12px;
+    }
+
+    .btn {
+      border: none;
+      background: #111827;
+      color: #e5e7eb;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn[disabled] {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    .time {
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .progress-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .progress {
+      flex: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 4px;
+      border-radius: 999px;
+      background: #4b5563;
+      cursor: pointer;
+    }
+
+    .progress::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #f97316;
+      cursor: pointer;
+      margin-top: -3px;
+    }
+
+    .progress::-moz-range-thumb {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #f97316;
+      cursor: pointer;
+      border: none;
+    }
+
+    .volume {
+      width: 70px;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 4px;
+      border-radius: 999px;
+      background: #4b5563;
+      cursor: pointer;
+    }
+
+    .volume::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #22c55e;
+      cursor: pointer;
+      margin-top: -3px;
+    }
+
+    .volume::-moz-range-thumb {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #22c55e;
+      cursor: pointer;
+      border: none;
+    }
+
+    .spacer {
+      width: 6px;
+      flex-shrink: 0;
+    }
+
+    .fullscreen-indicator {
+      font-size: 10px;
+      opacity: 0.7;
     }
   </style>
 </head>
 <body>
   <input type="file" id="videoInput" accept="video/*" />
-  <video id="player" controls></video>
+
+  <div class="player-wrapper" id="playerWrapper">
+    <video id="player"></video>
+    <div class="controls">
+      <button class="btn" id="playPause" disabled>Play</button>
+
+      <div class="progress-container">
+        <span class="time" id="currentTime">00:00</span>
+        <input type="range" id="progress" class="progress" min="0" max="100" value="0" />
+        <span class="time" id="duration">00:00</span>
+      </div>
+
+      <span class="spacer"></span>
+
+      <input type="range" id="volume" class="volume" min="0" max="1" step="0.01" value="1" />
+
+      <button class="btn" id="fullscreenBtn">Fullscreen</button>
+      <span class="fullscreen-indicator" id="fsIndicator"></span>
+    </div>
+  </div>
 
   <script>
     const input = document.getElementById('videoInput');
     const player = document.getElementById('player');
+    const playPause = document.getElementById('playPause');
+    const progress = document.getElementById('progress');
+    const currentTimeEl = document.getElementById('currentTime');
+    const durationEl = document.getElementById('duration');
+    const volume = document.getElementById('volume');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const wrapper = document.getElementById('playerWrapper');
+    const fsIndicator = document.getElementById('fsIndicator');
 
     let currentObjectUrl = null;
+
+    function formatTime(sec) {
+      if (!isFinite(sec)) return '00:00';
+      const s = Math.floor(sec % 60).toString().padStart(2, '0');
+      const m = Math.floor(sec / 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
 
     input.addEventListener('change', () => {
       const file = input.files && input.files[0];
@@ -58,10 +215,74 @@
 
       currentObjectUrl = URL.createObjectURL(file);
       player.src = currentObjectUrl;
-      player.play().catch(() => {
-        // autoplay potrebbe essere bloccato; l'utente può premere play.
+
+      player.addEventListener('loadedmetadata', () => {
+        durationEl.textContent = formatTime(player.duration || 0);
+        progress.value = 0;
+        playPause.disabled = false;
+      }, { once: true });
+
+      player.play().then(() => {
+        playPause.textContent = 'Pause';
+      }).catch(() => {
+        playPause.textContent = 'Play';
       });
     });
+
+    playPause.addEventListener('click', () => {
+      if (player.paused) {
+        player.play();
+      } else {
+        player.pause();
+      }
+    });
+
+    player.addEventListener('play', () => {
+      playPause.textContent = 'Pause';
+    });
+
+    player.addEventListener('pause', () => {
+      playPause.textContent = 'Play';
+    });
+
+    player.addEventListener('timeupdate', () => {
+      if (!player.duration) return;
+      const percent = (player.currentTime / player.duration) * 100;
+      progress.value = percent;
+      currentTimeEl.textContent = formatTime(player.currentTime);
+    });
+
+    progress.addEventListener('input', () => {
+      if (!player.duration) return;
+      const newTime = (progress.value / 100) * player.duration;
+      player.currentTime = newTime;
+    });
+
+    volume.addEventListener('input', () => {
+      player.volume = parseFloat(volume.value);
+    });
+
+    async function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        try {
+          await wrapper.requestFullscreen();
+        } catch (e) {
+          console.error('Fullscreen error', e);
+        }
+      } else {
+        await document.exitFullscreen();
+      }
+    }
+
+    fullscreenBtn.addEventListener('click', toggleFullscreen);
+
+    document.addEventListener('fullscreenchange', () => {
+      const isFs = !!document.fullscreenElement;
+      fullscreenBtn.textContent = isFs ? 'Exit FS' : 'Fullscreen';
+      fsIndicator.textContent = isFs ? 'FS' : '';
+    });
+
+    player.volume = 1;
   </script>
 </body>
 </html>
