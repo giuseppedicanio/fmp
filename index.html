@@ -8,70 +8,48 @@
       box-sizing: border-box;
     }
 
-    body {
+    html, body {
       margin: 0;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #0f172a;
+      padding: 0;
+      height: 100%;
+      background: #000;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       color: #e5e7eb;
+    }
+
+    body {
+      overflow: hidden;
+    }
+
+    /* Il player occupa SEMPRE tutto il viewport */
+    .player-wrapper {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      background: #000;
     }
 
     #videoInput {
       position: fixed;
       top: 16px;
       left: 16px;
+      z-index: 20;
       color: #e5e7eb;
-      z-index: 10;
-    }
-
-    .player-wrapper {
-      position: relative;
-      max-width: 90vw;
-      max-height: 80vh;
-      background: #020617;
-      border-radius: 0.75rem;
-      overflow: hidden;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* FULLSCREEN: il wrapper occupa tutto lo schermo */
-    .player-wrapper:fullscreen,
-    .player-wrapper:-webkit-full-screen {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      max-width: none;
-      max-height: none;
-      border-radius: 0;
-      box-shadow: none;
     }
 
     video {
+      flex: 1 1 auto;
       width: 100%;
-      height: auto;
-      max-height: calc(80vh - 48px);
-      display: block;
-      transform: scaleX(-1); /* video flippato */
-      background: black;
+      height: 100%;
       object-fit: contain;
-      flex-shrink: 0;
-    }
-
-    /* FULLSCREEN: il video usa lo spazio verticale rimanente */
-    .player-wrapper:fullscreen video,
-    .player-wrapper:-webkit-full-screen video {
-      height: calc(100vh - 48px);
-      max-height: none;
+      background: #000;
+      transform: scaleX(-1); /* video flippato */
+      display: block;
     }
 
     .controls {
+      flex: 0 0 auto;
       display: flex;
       align-items: center;
       gap: 8px;
