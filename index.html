@@ -1,344 +1,203 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Flipped Video Player</title>
+  <title>Flipped Media Player</title>
   <style>
-    * {
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background-color: white;
+      color: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       box-sizing: border-box;
     }
 
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
+    #player-container {
+      margin-top: 20px;
+      max-width: 800px;
+      width: 100%;
+      display: none; /* hidden until file is selected */
+    }
+
+    .video-wrapper {
       width: 100%;
       background: #000;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      color: #e5e7eb;
-      overscroll-behavior: none;
-    }
-
-    body {
-      overflow: hidden;
-    }
-
-    /* Player sempre a tutto schermo, con safe-area per notch / gesture bar */
-    .player-wrapper {
-      position: fixed;
-      inset: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0)
-             env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
-      display: flex;
-      flex-direction: column;
-      background: #000;
-    }
-
-    #videoInput {
-      position: fixed;
-      top: calc(8px + env(safe-area-inset-top, 0));
-      left: calc(8px + env(safe-area-inset-left, 0));
-      z-index: 20;
-      color: #e5e7eb;
-      font-size: 12px;
-      max-width: 60vw;
-      opacity: 0.9;
     }
 
     video {
-      flex: 1 1 auto;
       width: 100%;
-      height: 100%;
-      object-fit: contain;
-      background: #000;
-      transform: scaleX(-1); /* video flippato */
       display: block;
-      touch-action: manipulation;
+      transform: scaleX(-1); /* flip video horizontally */
+      background: #000;
     }
 
     .controls {
-      flex: 0 0 auto;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
+      padding: 10px 0;
+      color: #000;
+    }
+
+    button {
       padding: 6px 10px;
-      padding-bottom: calc(6px + env(safe-area-inset-bottom, 0));
-      background: rgba(15, 23, 42, 0.95);
-      border-top: 1px solid #1f2937;
-      font-size: 12px;
-    }
-
-    .btn {
-      border: none;
-      background: #111827;
-      color: #e5e7eb;
-      padding: 4px 8px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 12px;
-      white-space: nowrap;
-    }
-
-    .btn:active {
-      transform: scale(0.97);
-    }
-
-    .btn[disabled] {
-      opacity: 0.5;
-      cursor: default;
-    }
-
-    .time {
-      white-space: nowrap;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .progress-container {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      min-width: 0;
-    }
-
-    .progress {
-      flex: 1;
-      -webkit-appearance: none;
-      appearance: none;
-      height: 4px;
-      border-radius: 999px;
-      background: #4b5563;
+      border: 1px solid #ccc;
+      background: #fff;
       cursor: pointer;
     }
 
-    .progress::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #f97316;
-      cursor: pointer;
-      margin-top: -3px;
+    button:hover {
+      background: #f0f0f0;
     }
 
-    .progress::-moz-range-thumb {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #f97316;
-      cursor: pointer;
-      border: none;
-    }
-
-    .volume {
-      width: 70px;
-      -webkit-appearance: none;
-      appearance: none;
-      height: 4px;
-      border-radius: 999px;
-      background: #4b5563;
+    input[type="range"] {
       cursor: pointer;
     }
 
-    .volume::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #22c55e;
-      cursor: pointer;
-      margin-top: -3px;
-    }
-
-    .volume::-moz-range-thumb {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #22c55e;
-      cursor: pointer;
-      border: none;
+    .time-display {
+      min-width: 70px;
+      text-align: center;
+      font-family: monospace;
     }
 
     .spacer {
-      width: 6px;
-      flex-shrink: 0;
-    }
-
-    .fullscreen-indicator {
-      font-size: 10px;
-      opacity: 0.7;
-    }
-
-    /* Layout adattato per schermi piccoli (telefoni) */
-    @media (max-width: 640px) {
-      #videoInput {
-        font-size: 11px;
-        max-width: 70vw;
-      }
-
-      .controls {
-        padding: 6px 8px;
-        gap: 6px;
-        font-size: 11px;
-      }
-
-      .btn {
-        padding: 4px 6px;
-        font-size: 11px;
-      }
-
-      .time {
-        font-size: 11px;
-      }
-
-      .volume {
-        width: 60px;
-      }
-    }
-
-    /* Schermi molto stretti: comprimiamo testi */
-    @media (max-width: 420px) {
-      #duration {
-        display: none; /* si può togliere se vuoi vederlo sempre */
-      }
+      flex: 1;
     }
   </style>
 </head>
 <body>
-  <input type="file" id="videoInput" accept="video/*" />
+  <h2>Flipped Video Player</h2>
 
-  <div class="player-wrapper" id="playerWrapper">
-    <video id="player"></video>
+  <!-- Step 1: Only file selector shown at start -->
+  <input type="file" id="file-input" accept="video/*" />
+
+  <!-- Step 2: Player appears after file is chosen -->
+  <div id="player-container">
+    <div class="video-wrapper">
+      <video id="video" playsinline></video>
+    </div>
     <div class="controls">
-      <button class="btn" id="playPause" disabled>Play</button>
+      <button id="play-pause">Play</button>
 
-      <div class="progress-container">
-        <span class="time" id="currentTime">00:00</span>
-        <input type="range" id="progress" class="progress" min="0" max="100" value="0" />
-        <span class="time" id="duration">00:00</span>
-      </div>
+      <div class="time-display" id="time-display">0:00</div>
 
-      <span class="spacer"></span>
+      <input type="range" id="seek-bar" min="0" max="100" value="0" style="flex: 1;" />
 
-      <input type="range" id="volume" class="volume" min="0" max="1" step="0.01" value="1" />
-
-      <button class="btn" id="fullscreenBtn">Fullscreen</button>
-      <span class="fullscreen-indicator" id="fsIndicator"></span>
+      <input type="range" id="volume" min="0" max="1" step="0.01" value="1" />
+      <button id="fullscreen">Full</button>
     </div>
   </div>
 
   <script>
-    const input = document.getElementById('videoInput');
-    const player = document.getElementById('player');
-    const playPause = document.getElementById('playPause');
-    const progress = document.getElementById('progress');
-    const currentTimeEl = document.getElementById('currentTime');
-    const durationEl = document.getElementById('duration');
-    const volume = document.getElementById('volume');
-    const fullscreenBtn = document.getElementById('fullscreenBtn');
-    const wrapper = document.getElementById('playerWrapper');
-    const fsIndicator = document.getElementById('fsIndicator');
+    const fileInput = document.getElementById('file-input');
+    const playerContainer = document.getElementById('player-container');
+    const video = document.getElementById('video');
+    const playPauseBtn = document.getElementById('play-pause');
+    const timeDisplay = document.getElementById('time-display');
+    const seekBar = document.getElementById('seek-bar');
+    const volumeSlider = document.getElementById('volume');
+    const fullscreenBtn = document.getElementById('fullscreen');
 
-    let currentObjectUrl = null;
-    let lastTap = 0;
+    let videoURL = null;
+    let seekingByUser = false;
 
-    function formatTime(sec) {
-      if (!isFinite(sec)) return '00:00';
-      const s = Math.floor(sec % 60).toString().padStart(2, '0');
-      const m = Math.floor(sec / 60).toString().padStart(2, '0');
-      return `${m}:${s}`;
+    // Format seconds to M:SS
+    function formatTime(seconds) {
+      if (isNaN(seconds)) return '0:00';
+      const m = Math.floor(seconds / 60);
+      const s = Math.floor(seconds % 60);
+      return m + ':' + (s < 10 ? '0' + s : s);
     }
 
-    input.addEventListener('change', () => {
-      const file = input.files && input.files[0];
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
       if (!file) return;
 
-      if (currentObjectUrl) {
-        URL.revokeObjectURL(currentObjectUrl);
-        currentObjectUrl = null;
+      // Release old URL if any
+      if (videoURL) {
+        URL.revokeObjectURL(videoURL);
       }
 
-      currentObjectUrl = URL.createObjectURL(file);
-      player.src = currentObjectUrl;
+      videoURL = URL.createObjectURL(file);
+      video.src = videoURL;
+      video.load();
 
-      player.addEventListener('loadedmetadata', () => {
-        durationEl.textContent = formatTime(player.duration || 0);
-        progress.value = 0;
-        playPause.disabled = false;
-      }, { once: true });
-
-      player.play().then(() => {
-        playPause.textContent = 'Pause';
-      }).catch(() => {
-        playPause.textContent = 'Play';
-      });
+      playerContainer.style.display = 'block';
+      playPauseBtn.textContent = 'Play';
     });
 
-    playPause.addEventListener('click', () => {
-      if (player.paused) {
-        player.play();
+    playPauseBtn.addEventListener('click', () => {
+      if (!video.src) return;
+      if (video.paused) {
+        video.play();
       } else {
-        player.pause();
+        video.pause();
       }
     });
 
-    player.addEventListener('play', () => {
-      playPause.textContent = 'Pause';
+    video.addEventListener('play', () => {
+      playPauseBtn.textContent = 'Pause';
     });
 
-    player.addEventListener('pause', () => {
-      playPause.textContent = 'Play';
+    video.addEventListener('pause', () => {
+      playPauseBtn.textContent = 'Play';
     });
 
-    player.addEventListener('timeupdate', () => {
-      if (!player.duration) return;
-      const percent = (player.currentTime / player.duration) * 100;
-      progress.value = percent;
-      currentTimeEl.textContent = formatTime(player.currentTime);
+    // Update time and seek bar as video plays
+    video.addEventListener('timeupdate', () => {
+      if (!seekingByUser) {
+        const current = video.currentTime;
+        const duration = video.duration || 0;
+        timeDisplay.textContent = formatTime(current);
+        if (duration > 0) {
+          seekBar.value = (current / duration) * 100;
+        }
+      }
     });
 
-    progress.addEventListener('input', () => {
-      if (!player.duration) return;
-      const newTime = (progress.value / 100) * player.duration;
-      player.currentTime = newTime;
+    // Seek bar interaction
+    seekBar.addEventListener('input', () => {
+      seekingByUser = true;
+      const duration = video.duration || 0;
+      const value = seekBar.value;
+      if (duration > 0) {
+        video.currentTime = (value / 100) * duration;
+      }
     });
 
-    volume.addEventListener('input', () => {
-      player.volume = parseFloat(volume.value);
+    seekBar.addEventListener('change', () => {
+      seekingByUser = false;
     });
 
-    async function toggleFullscreen() {
+    // Volume control
+    volumeSlider.addEventListener('input', () => {
+      video.volume = volumeSlider.value;
+    });
+
+    // Fullscreen
+    fullscreenBtn.addEventListener('click', () => {
       if (!document.fullscreenElement) {
-        try {
-          await wrapper.requestFullscreen();
-        } catch (e) {
-          console.error('Fullscreen error', e);
+        if (video.requestFullscreen) {
+          video.requestFullscreen();
+        } else if (video.webkitRequestFullscreen) {
+          video.webkitRequestFullscreen();
+        } else if (video.msRequestFullscreen) {
+          video.msRequestFullscreen();
         }
       } else {
-        await document.exitFullscreen();
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+          document.msExitFullscreen();
+        }
       }
-    }
-
-    fullscreenBtn.addEventListener('click', toggleFullscreen);
-
-    // Doppio click / doppio tap sul video per fullscreen
-    player.addEventListener('click', (e) => {
-      const now = Date.now();
-      if (now - lastTap < 300) {
-        toggleFullscreen();
-      }
-      lastTap = now;
     });
-
-    document.addEventListener('fullscreenchange', () => {
-      const isFs = !!document.fullscreenElement;
-      fullscreenBtn.textContent = isFs ? 'Exit FS' : 'Fullscreen';
-      fsIndicator.textContent = isFs ? 'FS' : '';
-    });
-
-    player.volume = 1;
   </script>
 </body>
 </html>
