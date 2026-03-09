@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
-  <title>Video Flippato</title>
+  <title>VLC-like Flip Player</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -11,127 +11,359 @@
       min-height: 100vh;
       background: #fff;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 12px;
       font-family: system-ui, sans-serif;
     }
 
     .player {
+      width: 100%;
+      max-width: 900px;
+      background: #000;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 8px;
     }
 
-    .video-frame {
+    .video-area {
+      position: relative;
       background: #000;
-      max-width: 90vw;
-      max-height: 80vh;
       display: flex;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
     }
 
-    /* SOLO l'immagine del video è specchiata */
-    .mirror {
+    /* SOLO il video è flippato */
+    .mirror-wrapper {
+      width: 100%;
+      height: 100%;
       transform: scaleX(-1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     video {
-      max-width: 100%;
-      max-height: 80vh;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
       display: block;
+    }
+
+    /* Barra controlli in stile VLC */
+    .controls {
+      background: #d8d8d8;
+      color: #000;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+      gap: 8px;
+      font-size: 12px;
+      user-select: none;
+    }
+
+    .controls-left,
+    .controls-center,
+    .controls-right {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .controls-center {
+      flex: 1;
+    }
+
+    /* Pulsanti base VLC-like */
+    .btn {
+      width: 24px;
+      height: 24px;
+      border: none;
+      border-radius: 2px;
+      background: #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .btn:hover {
+      background: #ffffff;
+    }
+
+    .btn:active {
+      background: #e0e0e0;
+    }
+
+    /* Icone */
+    .icon {
+      position: relative;
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Play: triangolo */
+    .icon-play::before {
+      content: "";
+      position: absolute;
+      left: 4px;
+      top: 2px;
+      border-style: solid;
+      border-width: 5px 0 5px 8px;
+      border-color: transparent transparent transparent #000;
+    }
+
+    /* Pausa: due stanghette */
+    .playing .icon-play::before,
+    .playing .icon-play::after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      width: 3px;
+      height: 10px;
       background: #000;
     }
 
-    .controls {
+    .playing .icon-play::before {
+      left: 3px;
+    }
+
+    .playing .icon-play::after {
+      right: 3px;
+    }
+
+    /* Stop: quadratino */
+    .icon-stop::before {
+      content: "";
+      position: absolute;
+      inset: 3px;
+      background: #000;
+    }
+
+    /* Volume: cassa + onda */
+    .icon-volume::before {
+      content: "";
+      position: absolute;
+      left: 1px;
+      top: 3px;
+      width: 7px;
+      height: 8px;
+      background: #000;
+      clip-path: polygon(0 30%, 45% 30%, 100% 0, 100% 100%, 45% 70%, 0 70%);
+    }
+
+    .icon-volume::after {
+      content: "";
+      position: absolute;
+      right: 0;
+      top: 3px;
+      width: 7px;
+      height: 8px;
+      border-radius: 50%;
+      border: 2px solid #000;
+      border-left-color: transparent;
+      border-bottom-color: transparent;
+      transform: translateX(1px) rotate(45deg);
+    }
+
+    .muted .icon-volume::after {
+      opacity: 0;
+    }
+
+    /* Fullscreen: angoli */
+    .icon-full::before,
+    .icon-full::after {
+      content: "";
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border: 2px solid #000;
+      border-left-color: transparent;
+      border-top-color: transparent;
+      transform: translate(1px, 1px);
+    }
+
+    .icon-full::after {
+      transform: translate(-1px, -1px) rotate(180deg);
+    }
+
+    /* Barra avanzamento VLC-like */
+    .progress-wrapper {
+      flex: 1;
       display: flex;
       align-items: center;
-      gap: 8px;
-      width: 100%;
-      max-width: 90vw;
+      gap: 6px;
     }
 
-    button {
-      padding: 4px 10px;
-      border-radius: 999px;
-      border: 1px solid #ddd;
-      background: #fff;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    button:hover {
-      background: #f5f5f5;
-    }
-
-    input[type="range"] {
+    .progress {
+      position: relative;
       flex: 1;
-      -webkit-appearance: none;
-      appearance: none;
-      height: 3px;
-      border-radius: 999px;
-      background: #e2e2e2;
-      outline: none;
+      height: 6px;
+      background: #b0b0b0;
+      border-radius: 2px;
       cursor: pointer;
     }
 
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
+    .progress-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 0%;
+      background: #ff8800; /* tipico arancione VLC */
+      border-radius: 2px;
+      pointer-events: none;
+    }
+
+    .progress-thumb {
+      position: absolute;
+      top: 50%;
       width: 10px;
       height: 10px;
+      margin-top: -5px;
+      margin-left: -5px;
       border-radius: 50%;
-      background: #111;
+      background: #ff8800;
+      pointer-events: none;
+    }
+
+    .time-label {
+      min-width: 70px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      color: #111;
+    }
+
+    /* Slider volume stile VLC (barretta) */
+    .volume-slider {
+      width: 70px;
+      height: 4px;
+      background: #b0b0b0;
+      border-radius: 2px;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .volume-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 100%;
+      background: #ff8800;
+      border-radius: 2px;
+      pointer-events: none;
+    }
+
+    .volume-thumb {
+      position: absolute;
+      top: 50%;
+      width: 8px;
+      height: 8px;
       margin-top: -4px;
-    }
-
-    input[type="range"]::-moz-range-thumb {
-      width: 10px;
-      height: 10px;
+      margin-left: -4px;
       border-radius: 50%;
-      background: #111;
-      border: none;
+      background: #ff8800;
+      pointer-events: none;
     }
 
-    input[type="range"]::-moz-range-track {
-      background: #e2e2e2;
-      height: 3px;
-      border-radius: 999px;
+    /* Fullscreen layout: player occupa tutto ma controlli restano sotto il video */
+    .player:fullscreen,
+    .player:-webkit-full-screen,
+    .player:-moz-full-screen {
+      width: 100vw;
+      height: 100vh;
+    }
+
+    .player:fullscreen .video-area,
+    .player:-webkit-full-screen .video-area,
+    .player:-moz-full-screen .video-area {
+      flex: 1;
+      max-height: none;
     }
   </style>
 </head>
 <body>
-  <input id="fileInput" type="file" accept="video/*" />
+  <div class="player" id="player">
+    <input id="fileInput" type="file" accept="video/*" style="padding: 6px 8px; background:#eee; border:none; outline:none;" />
 
-  <div class="player">
-    <div class="video-frame">
-      <div class="mirror">
+    <div class="video-area">
+      <div class="mirror-wrapper">
         <video id="video"></video>
       </div>
     </div>
 
     <div class="controls">
-      <button id="playPauseBtn" type="button">Play</button>
-      <input id="seekBar" type="range" min="0" max="100" value="0" />
+      <div class="controls-left">
+        <button class="btn" id="playBtn">
+          <div class="icon icon-play"></div>
+        </button>
+        <button class="btn" id="stopBtn">
+          <div class="icon icon-stop"></div>
+        </button>
+      </div>
+
+      <div class="controls-center">
+        <div class="progress-wrapper">
+          <div class="progress" id="progressBar">
+            <div class="progress-fill" id="progressFill"></div>
+            <div class="progress-thumb" id="progressThumb"></div>
+          </div>
+          <div class="time-label" id="timeLabel">00:00 / 00:00</div>
+        </div>
+      </div>
+
+      <div class="controls-right">
+        <button class="btn" id="volumeBtn">
+          <div class="icon icon-volume"></div>
+        </button>
+        <div class="volume-slider" id="volumeSlider">
+          <div class="volume-fill" id="volumeFill"></div>
+          <div class="volume-thumb" id="volumeThumb"></div>
+        </div>
+        <button class="btn" id="fsBtn">
+          <div class="icon icon-full"></div>
+        </button>
+      </div>
     </div>
   </div>
 
   <script>
     const fileInput = document.getElementById("fileInput");
     const video = document.getElementById("video");
-    const playPauseBtn = document.getElementById("playPauseBtn");
-    const seekBar = document.getElementById("seekBar");
+    const player = document.getElementById("player");
+
+    const playBtn = document.getElementById("playBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const progressBar = document.getElementById("progressBar");
+    const progressFill = document.getElementById("progressFill");
+    const progressThumb = document.getElementById("progressThumb");
+    const timeLabel = document.getElementById("timeLabel");
+    const volumeBtn = document.getElementById("volumeBtn");
+    const volumeSlider = document.getElementById("volumeSlider");
+    const volumeFill = document.getElementById("volumeFill");
+    const volumeThumb = document.getElementById("volumeThumb");
+    const fsBtn = document.getElementById("fsBtn");
 
     let objectUrl = null;
     let isSeeking = false;
+    let lastVolume = 1;
 
+    function formatTime(s) {
+      if (!isFinite(s)) return "00:00";
+      const m = Math.floor(s / 60);
+      const sec = Math.floor(s % 60);
+      return String(m).padStart(2, "0") + ":" + String(sec).padStart(2, "0");
+    }
+
+    // Caricamento file
     fileInput.addEventListener("change", () => {
       const file = fileInput.files && fileInput.files[0];
       if (!file) return;
-
       if (objectUrl) URL.revokeObjectURL(objectUrl);
       objectUrl = URL.createObjectURL(file);
       video.src = objectUrl;
@@ -139,7 +371,8 @@
       video.play();
     });
 
-    playPauseBtn.addEventListener("click", () => {
+    // Play / pausa
+    playBtn.addEventListener("click", () => {
       if (video.paused || video.ended) {
         video.play();
       } else {
@@ -148,28 +381,111 @@
     });
 
     video.addEventListener("play", () => {
-      playPauseBtn.textContent = "Pausa";
+      playBtn.classList.add("playing");
     });
 
     video.addEventListener("pause", () => {
-      playPauseBtn.textContent = "Play";
+      playBtn.classList.remove("playing");
     });
 
+    // Stop
+    stopBtn.addEventListener("click", () => {
+      video.pause();
+      video.currentTime = 0;
+    });
+
+    // Avanzamento e tempo
     video.addEventListener("timeupdate", () => {
-      if (isSeeking || !video.duration) return;
+      if (!video.duration || isSeeking) return;
       const ratio = video.currentTime / video.duration;
-      seekBar.value = ratio * 100;
+      const percent = ratio * 100;
+      progressFill.style.width = percent + "%";
+      progressThumb.style.left = percent + "%";
+      timeLabel.textContent =
+        formatTime(video.currentTime) + " / " + formatTime(video.duration);
     });
 
-    seekBar.addEventListener("input", () => {
-      isSeeking = true;
-      if (!video.duration) return;
-      const ratio = seekBar.value / 100;
+    function seekFromClientX(clientX) {
+      const rect = progressBar.getBoundingClientRect();
+      let ratio = (clientX - rect.left) / rect.width;
+      ratio = Math.max(0, Math.min(1, ratio));
       video.currentTime = ratio * video.duration;
+    }
+
+    progressBar.addEventListener("mousedown", (e) => {
+      if (!video.duration) return;
+      isSeeking = true;
+      seekFromClientX(e.clientX);
+
+      const move = (ev) => {
+        seekFromClientX(ev.clientX);
+      };
+      const up = () => {
+        isSeeking = false;
+        window.removeEventListener("mousemove", move);
+        window.removeEventListener("mouseup", up);
+      };
+      window.addEventListener("mousemove", move);
+      window.addEventListener("mouseup", up);
     });
 
-    seekBar.addEventListener("change", () => {
-      isSeeking = false;
+    // Volume
+    function setVolumeFromClientX(clientX) {
+      const rect = volumeSlider.getBoundingClientRect();
+      let ratio = (clientX - rect.left) / rect.width;
+      ratio = Math.max(0, Math.min(1, ratio));
+      video.volume = ratio;
+      volumeFill.style.width = ratio * 100 + "%";
+      volumeThumb.style.left = ratio * 100 + "%";
+      if (ratio === 0) {
+        volumeBtn.classList.add("muted");
+      } else {
+        volumeBtn.classList.remove("muted");
+        lastVolume = ratio;
+      }
+    }
+
+    // inizializza volume a 100%
+    video.volume = 1;
+    volumeFill.style.width = "100%";
+    volumeThumb.style.left = "100%";
+
+    volumeSlider.addEventListener("mousedown", (e) => {
+      setVolumeFromClientX(e.clientX);
+      const move = (ev) => setVolumeFromClientX(ev.clientX);
+      const up = () => {
+        window.removeEventListener("mousemove", move);
+        window.removeEventListener("mouseup", up);
+      };
+      window.addEventListener("mousemove", move);
+      window.addEventListener("mouseup", up);
+    });
+
+    volumeBtn.addEventListener("click", () => {
+      if (video.volume === 0) {
+        const v = lastVolume || 1;
+        video.volume = v;
+        volumeFill.style.width = v * 100 + "%";
+        volumeThumb.style.left = v * 100 + "%";
+        volumeBtn.classList.remove("muted");
+      } else {
+        lastVolume = video.volume || lastVolume || 1;
+        video.volume = 0;
+        volumeFill.style.width = "0%";
+        volumeThumb.style.left = "0%";
+        volumeBtn.classList.add("muted");
+      }
+    });
+
+    // Fullscreen del player (video resta flippato, controlli normali)
+    fsBtn.addEventListener("click", async () => {
+      if (!document.fullscreenElement) {
+        if (player.requestFullscreen) await player.requestFullscreen();
+        else if (player.webkitRequestFullscreen) player.webkitRequestFullscreen();
+      } else {
+        if (document.exitFullscreen) await document.exitFullscreen();
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      }
     });
   </script>
 </body>
