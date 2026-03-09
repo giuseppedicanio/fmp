@@ -1,92 +1,419 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Flip Media Player</title>
-<style>
-  body {
-    background-color: white;
-    font-family: Arial, sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    margin: 0;
-  }
+  <meta charset="UTF-8" />
+  <title>Video Specchiato</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --accent: #111;
+      --accent-light: #777;
+      --border: #e0e0e0;
+    }
 
-  h1 {
-    color: #333;
-  }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-  #videoWrapper {
-    position: relative;
-    max-width: 90%;
-    max-height: 60vh;
-    margin-top: 20px;
-  }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Segoe UI", sans-serif;
+      background: #ffffff;
+      color: #000000;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+    }
 
-  canvas {
-    display: block;
-    width: 100%;
-    height: auto;
-  }
+    .shell {
+      width: 100%;
+      max-width: 880px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      background: #ffffff;
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.06);
+    }
 
-  video {
-    display: block;
-    width: 100%;
-    height: auto;
-    /* Manteniamo i controlli visibili */
-  }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 16px;
+      gap: 12px;
+    }
 
-  input[type="file"] {
-    margin-top: 20px;
-  }
-</style>
+    .title {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: var(--accent-light);
+    }
+
+    .file-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .file-label {
+      font-size: 13px;
+      color: var(--accent-light);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    input[type="file"] {
+      font-size: 13px;
+    }
+
+    input[type="file"]::file-selector-button {
+      border: 1px solid var(--border);
+      background: #fafafa;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    input[type="file"]::file-selector-button:hover {
+      background: #f0f0f0;
+      border-color: #d0d0d0;
+    }
+
+    .player-shell {
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #fdfdfd;
+      padding: 10px 10px 12px;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .video-frame {
+      position: relative;
+      background: #000;
+      border-radius: 8px;
+      overflow: hidden;
+      aspect-ratio: 16 / 9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Contenitore che viene mandato a schermo intero */
+    .video-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* Wrapper specchiato: solo l'immagine video viene ribaltata */
+    .video-mirror-wrapper {
+      width: 100%;
+      height: 100%;
+      transform: scaleX(-1);
+      transform-origin: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 4px;
+      font-size: 12px;
+      color: var(--accent-light);
+      user-select: none;
+    }
+
+    .controls-left,
+    .controls-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .controls-main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    button.ctrl {
+      border: 1px solid var(--border);
+      background: #ffffff;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      cursor: pointer;
+      color: var(--accent);
+      transition: background 0.15s ease, border-color 0.15s ease,
+        transform 0.08s ease;
+      min-width: 80px;
+    }
+
+    button.ctrl.small {
+      min-width: 0;
+      padding: 4px 8px;
+      letter-spacing: 0.18em;
+    }
+
+    button.ctrl:active {
+      transform: translateY(1px);
+    }
+
+    button.ctrl:hover {
+      background: #f4f4f4;
+      border-color: #d0d0d0;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 4px;
+      border-radius: 999px;
+      background: #e6e6e6;
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #111;
+      cursor: pointer;
+      margin-top: -5px;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #111;
+      cursor: pointer;
+      border: none;
+    }
+
+    input[type="range"]::-moz-range-track {
+      background: #e6e6e6;
+      height: 4px;
+      border-radius: 999px;
+    }
+
+    .time-label {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .hint {
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--accent-light);
+    }
+
+    @media (max-width: 600px) {
+      .shell {
+        padding: 18px;
+      }
+      .controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .controls-main {
+        width: 100%;
+      }
+      .controls-left,
+      .controls-right {
+        justify-content: space-between;
+      }
+    }
+  </style>
 </head>
 <body>
-<h1>Carica un video</h1>
-<input type="file" id="videoUpload" accept="video/*">
+  <main class="shell">
+    <header class="header">
+      <div>
+        <div class="title">Video Specchiato</div>
+        <div class="subtitle">Carica un video, guardalo riflesso.</div>
+      </div>
+      <div class="subtitle">concept demo</div>
+    </header>
 
-<div id="videoWrapper">
-  <video id="videoPlayer" controls></video>
-  <canvas id="mirrorCanvas"></canvas>
-</div>
+    <section class="file-row">
+      <span class="file-label">Sorgente</span>
+      <input id="fileInput" type="file" accept="video/*" />
+    </section>
 
-<script>
-const videoUpload = document.getElementById('videoUpload');
-const videoPlayer = document.getElementById('videoPlayer');
-const canvas = document.getElementById('mirrorCanvas');
-const ctx = canvas.getContext('2d');
+    <section id="playerShell" class="player-shell">
+      <div class="video-container" id="videoContainer">
+        <div class="video-frame">
+          <div class="video-mirror-wrapper">
+            <video id="video" preload="metadata"></video>
+          </div>
+        </div>
 
-videoUpload.addEventListener('change', function() {
-  const file = this.files[0];
-  if (file) {
-    const videoURL = URL.createObjectURL(file);
-    videoPlayer.src = videoURL;
-    videoPlayer.play();
-  }
-});
+        <div class="controls">
+          <div class="controls-left">
+            <button id="playPauseBtn" class="ctrl">PLAY</button>
+          </div>
 
-// Aggiorna il canvas in tempo reale specchiando il video
-videoPlayer.addEventListener('play', function() {
-  canvas.width = videoPlayer.videoWidth;
-  canvas.height = videoPlayer.videoHeight;
+          <div class="controls-main">
+            <input id="seekBar" type="range" min="0" max="100" value="0" />
+            <span id="timeLabel" class="time-label">00:00 / 00:00</span>
+          </div>
 
-  function draw() {
-    if (!videoPlayer.paused && !videoPlayer.ended) {
-      ctx.save();
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.translate(canvas.width, 0);
-      ctx.scale(-1, 1); // specchia orizzontalmente
-      ctx.drawImage(videoPlayer, 0, 0, canvas.width, canvas.height);
-      ctx.restore();
-      requestAnimationFrame(draw);
+          <div class="controls-right">
+            <input
+              id="volume"
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value="1"
+              style="max-width: 80px"
+              title="Volume"
+            />
+            <button id="fsBtn" class="ctrl small">FULL</button>
+          </div>
+        </div>
+      </div>
+      <p class="hint">
+        Il video è specchiato orizzontalmente. I controlli restano “normali”.
+      </p>
+    </section>
+  </main>
+
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const playerShell = document.getElementById("playerShell");
+    const video = document.getElementById("video");
+    const playPauseBtn = document.getElementById("playPauseBtn");
+    const seekBar = document.getElementById("seekBar");
+    const timeLabel = document.getElementById("timeLabel");
+    const volume = document.getElementById("volume");
+    const fsBtn = document.getElementById("fsBtn");
+    const videoContainer = document.getElementById("videoContainer");
+
+    let objectUrl = null;
+    let isSeeking = false;
+
+    function formatTime(seconds) {
+      if (!isFinite(seconds)) return "00:00";
+      const m = Math.floor(seconds / 60);
+      const s = Math.floor(seconds % 60);
+      return `${m.toString().padStart(2, "0")}:${s
+        .toString()
+        .padStart(2, "0")}`;
     }
-  }
-  draw();
-});
-</script>
+
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files && fileInput.files[0];
+      if (!file) return;
+
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+      objectUrl = URL.createObjectURL(file);
+      video.src = objectUrl;
+      video.currentTime = 0;
+      seekBar.value = 0;
+      timeLabel.textContent = "00:00 / 00:00";
+      playPauseBtn.textContent = "PLAY";
+      playerShell.style.display = "flex";
+      video.load();
+    });
+
+    video.addEventListener("loadedmetadata", () => {
+      seekBar.value = 0;
+      timeLabel.textContent = `00:00 / ${formatTime(video.duration)}`;
+    });
+
+    playPauseBtn.addEventListener("click", () => {
+      if (video.paused || video.ended) {
+        video.play();
+      } else {
+        video.pause();
+      }
+    });
+
+    video.addEventListener("play", () => {
+      playPauseBtn.textContent = "PAUSA";
+    });
+
+    video.addEventListener("pause", () => {
+      playPauseBtn.textContent = "PLAY";
+    });
+
+    video.addEventListener("timeupdate", () => {
+      if (isSeeking) return;
+      const ratio = video.currentTime / video.duration || 0;
+      seekBar.value = ratio * 100;
+      timeLabel.textContent = `${formatTime(
+        video.currentTime
+      )} / ${formatTime(video.duration)}`;
+    });
+
+    seekBar.addEventListener("input", () => {
+      isSeeking = true;
+      const ratio = seekBar.value / 100;
+      video.currentTime = ratio * video.duration;
+    });
+
+    seekBar.addEventListener("change", () => {
+      isSeeking = false;
+    });
+
+    volume.addEventListener("input", () => {
+      video.volume = parseFloat(volume.value);
+    });
+
+    fsBtn.addEventListener("click", async () => {
+      if (!document.fullscreenElement) {
+        if (videoContainer.requestFullscreen) {
+          await videoContainer.requestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        }
+      }
+    });
+
+    document.addEventListener("fullscreenchange", () => {
+      fsBtn.textContent = document.fullscreenElement ? "ESCI" : "FULL";
+    });
+  </script>
 </body>
 </html>
