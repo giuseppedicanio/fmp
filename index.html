@@ -67,7 +67,7 @@
       font-family: monospace;
     }
 
-    /* Slider come striscia senza pallina visibile */
+    /* Slider base: striscia senza pallina visibile */
     input[type="range"] {
       -webkit-appearance: none;
       appearance: none;
@@ -78,6 +78,14 @@
       cursor: pointer;
     }
 
+    /* WebKit (Chrome, Edge, Safari, Opera) - traccia */
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 6px;
+      background: transparent; /* usiamo background inline JS */
+      border-radius: 3px;
+    }
+
+    /* WebKit - “pallina” invisibile */
     input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
@@ -85,8 +93,24 @@
       height: 0;
       background: transparent;
       border: none;
+      margin-top: 0;
     }
 
+    /* Firefox - traccia */
+    input[type="range"]::-moz-range-track {
+      height: 6px;
+      background: transparent; /* usiamo background inline JS */
+      border-radius: 3px;
+    }
+
+    /* Firefox - riempimento parte “passata” */
+    input[type="range"]::-moz-range-progress {
+      height: 6px;
+      background: #000;
+      border-radius: 3px;
+    }
+
+    /* Firefox - “pallina” invisibile */
     input[type="range"]::-moz-range-thumb {
       width: 0;
       height: 0;
@@ -94,26 +118,36 @@
       border: none;
     }
 
+    /* IE/Edge legacy - traccia */
+    input[type="range"]::-ms-track {
+      height: 6px;
+      background: transparent;
+      border-color: transparent;
+      color: transparent;
+    }
+
+    input[type="range"]::-ms-fill-lower {
+      background: #000;
+      border-radius: 3px;
+    }
+
+    input[type="range"]::-ms-fill-upper {
+      background: #ddd;
+      border-radius: 3px;
+    }
+
+    /* IE/Edge - “pallina” invisibile */
     input[type="range"]::-ms-thumb {
       width: 0;
       height: 0;
       background: transparent;
       border: none;
     }
-
-    /* Traccia per Firefox */
-    input[type="range"]::-moz-range-track {
-      height: 6px;
-      background: #ddd;
-      border-radius: 3px;
-    }
   </style>
 </head>
 <body>
-  <!-- All'inizio solo il selettore file -->
   <input type="file" id="file-input" accept="video/*" />
 
-  <!-- Player che compare dopo aver scelto il file -->
   <div id="player-container">
     <div class="video-wrapper">
       <video id="video" playsinline></video>
@@ -154,6 +188,7 @@
 
     // Aggiorna sfondo slider (riempimento) in base alla percentuale
     function updateSeekBarBackground(percent) {
+      // fallback semplice: gradiente per browser WebKit/moderni
       seekBar.style.background = `linear-gradient(to right, #000 0%, #000 ${percent}%, #ddd ${percent}%, #ddd 100%)`;
     }
 
@@ -165,7 +200,6 @@
       const file = fileInput.files[0];
       if (!file) return;
 
-      // Rilascia vecchia URL se c'è
       if (videoURL) {
         URL.revokeObjectURL(videoURL);
       }
@@ -177,7 +211,6 @@
       playerContainer.style.display = 'block';
       playPauseBtn.textContent = 'Play';
 
-      // reset barre
       seekBar.value = 0;
       updateSeekBarBackground(0);
       updateVolumeBackground(volumeSlider.value * 100);
