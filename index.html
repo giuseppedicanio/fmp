@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
-  <title>Flip Media Player</title>
+  <title></title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
@@ -37,61 +37,62 @@
       padding: 24px;
       background: #ffffff;
       box-shadow: 0 18px 60px rgba(0, 0, 0, 0.06);
-    }
-
-    .header {
       display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      margin-bottom: 16px;
-      gap: 12px;
+      flex-direction: column;
+      gap: 18px;
     }
 
-    .title {
-      font-size: 20px;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-    }
-
-    .subtitle {
-      font-size: 13px;
-      color: var(--accent-light);
-    }
-
-    .file-row {
+    /* Pulsante upload rotondo in alto */
+    .top-row {
       display: flex;
+      justify-content: flex-start;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 18px;
-      flex-wrap: wrap;
     }
 
-    .file-label {
-      font-size: 13px;
-      color: var(--accent-light);
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-    }
-
-    input[type="file"] {
-      font-size: 13px;
-    }
-
-    input[type="file"]::file-selector-button {
+    .upload-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
       border: 1px solid var(--border);
       background: #fafafa;
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.14em;
       cursor: pointer;
-      transition: background 0.15s ease, border-color 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s ease, border-color 0.15s ease,
+        transform 0.08s ease;
+      position: relative;
     }
 
-    input[type="file"]::file-selector-button:hover {
+    .upload-btn:hover {
       background: #f0f0f0;
       border-color: #d0d0d0;
+    }
+
+    .upload-btn:active {
+      transform: translateY(1px);
+    }
+
+    .upload-btn::before,
+    .upload-btn::after {
+      content: "";
+      position: absolute;
+      background: var(--accent);
+      border-radius: 999px;
+    }
+
+    .upload-btn::before {
+      width: 12px;
+      height: 2px;
+    }
+
+    .upload-btn::after {
+      width: 2px;
+      height: 12px;
+    }
+
+    #fileInput {
+      display: none;
     }
 
     .player-shell {
@@ -115,7 +116,6 @@
       justify-content: center;
     }
 
-    /* Contenitore che viene mandato a schermo intero */
     .video-container {
       width: 100%;
       height: 100%;
@@ -124,7 +124,6 @@
       gap: 8px;
     }
 
-    /* Wrapper specchiato: solo l'immagine video viene ribaltata */
     .video-mirror-wrapper {
       width: 100%;
       height: 100%;
@@ -148,7 +147,6 @@
       gap: 10px;
       padding: 0 4px;
       font-size: 12px;
-      color: var(--accent-light);
       user-select: none;
     }
 
@@ -166,36 +164,59 @@
       gap: 10px;
     }
 
-    button.ctrl {
+    /* Pulsante play/pause rotondo */
+    .ctrl-circle {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
       border: 1px solid var(--border);
       background: #ffffff;
-      border-radius: 999px;
-      padding: 4px 10px;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.14em;
       cursor: pointer;
-      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
       transition: background 0.15s ease, border-color 0.15s ease,
         transform 0.08s ease;
-      min-width: 80px;
+      position: relative;
     }
 
-    button.ctrl.small {
-      min-width: 0;
-      padding: 4px 8px;
-      letter-spacing: 0.18em;
-    }
-
-    button.ctrl:active {
-      transform: translateY(1px);
-    }
-
-    button.ctrl:hover {
+    .ctrl-circle:hover {
       background: #f4f4f4;
       border-color: #d0d0d0;
     }
 
+    .ctrl-circle:active {
+      transform: translateY(1px);
+    }
+
+    /* Icona play (triangolo) di default */
+    #playPauseBtn::before {
+      content: "";
+      border-style: solid;
+      border-width: 6px 0 6px 10px;
+      border-color: transparent transparent transparent var(--accent);
+      margin-left: 2px;
+    }
+
+    /* Icona pausa (due barre) quando in riproduzione */
+    #playPauseBtn.is-playing::before,
+    #playPauseBtn.is-playing::after {
+      content: "";
+      width: 3px;
+      height: 12px;
+      background: var(--accent);
+      border-radius: 999px;
+    }
+
+    #playPauseBtn.is-playing::before {
+      margin-right: 2px;
+    }
+
+    #playPauseBtn.is-playing::after {
+      margin-left: 2px;
+    }
+
+    /* Slider progresso */
     input[type="range"] {
       -webkit-appearance: none;
       appearance: none;
@@ -233,14 +254,39 @@
       border-radius: 999px;
     }
 
-    .time-label {
-      font-variant-numeric: tabular-nums;
+    /* Volume slider un po' più corto */
+    #volume {
+      max-width: 80px;
     }
 
-    .hint {
-      margin-top: 8px;
-      font-size: 11px;
-      color: var(--accent-light);
+    /* Pulsante full screen: quadrato vuoto */
+    #fsBtn {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #ffffff;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.15s ease, border-color 0.15s ease,
+        transform 0.08s ease;
+    }
+
+    #fsBtn::before {
+      content: "";
+      position: absolute;
+      inset: 4px;
+      border: 1px solid var(--accent);
+      border-radius: 3px;
+    }
+
+    #fsBtn:hover {
+      background: #f4f4f4;
+      border-color: #d0d0d0;
+    }
+
+    #fsBtn:active {
+      transform: translateY(1px);
     }
 
     @media (max-width: 600px) {
@@ -263,18 +309,10 @@
 </head>
 <body>
   <main class="shell">
-    <header class="header">
-      <div>
-        <div class="title">Video Specchiato</div>
-        <div class="subtitle">Carica un video, guardalo riflesso.</div>
-      </div>
-      <div class="subtitle">concept demo</div>
-    </header>
-
-    <section class="file-row">
-      <span class="file-label">Sorgente</span>
+    <div class="top-row">
+      <button id="uploadBtn" type="button" class="upload-btn"></button>
       <input id="fileInput" type="file" accept="video/*" />
-    </section>
+    </div>
 
     <section id="playerShell" class="player-shell">
       <div class="video-container" id="videoContainer">
@@ -286,12 +324,11 @@
 
         <div class="controls">
           <div class="controls-left">
-            <button id="playPauseBtn" class="ctrl">PLAY</button>
+            <button id="playPauseBtn" type="button" class="ctrl-circle"></button>
           </div>
 
           <div class="controls-main">
             <input id="seekBar" type="range" min="0" max="100" value="0" />
-            <span id="timeLabel" class="time-label">00:00 / 00:00</span>
           </div>
 
           <div class="controls-right">
@@ -302,26 +339,21 @@
               max="1"
               step="0.01"
               value="1"
-              style="max-width: 80px"
-              title="Volume"
             />
-            <button id="fsBtn" class="ctrl small">FULL</button>
+            <button id="fsBtn" type="button"></button>
           </div>
         </div>
       </div>
-      <p class="hint">
-        Il video è specchiato orizzontalmente. I controlli restano “normali”.
-      </p>
     </section>
   </main>
 
   <script>
     const fileInput = document.getElementById("fileInput");
+    const uploadBtn = document.getElementById("uploadBtn");
     const playerShell = document.getElementById("playerShell");
     const video = document.getElementById("video");
     const playPauseBtn = document.getElementById("playPauseBtn");
     const seekBar = document.getElementById("seekBar");
-    const timeLabel = document.getElementById("timeLabel");
     const volume = document.getElementById("volume");
     const fsBtn = document.getElementById("fsBtn");
     const videoContainer = document.getElementById("videoContainer");
@@ -330,13 +362,13 @@
     let isSeeking = false;
 
     function formatTime(seconds) {
-      if (!isFinite(seconds)) return "00:00";
-      const m = Math.floor(seconds / 60);
-      const s = Math.floor(seconds % 60);
-      return `${m.toString().padStart(2, "0")}:${s
-        .toString()
-        .padStart(2, "0")}`;
+      if (!isFinite(seconds)) return 0;
+      return seconds;
     }
+
+    uploadBtn.addEventListener("click", () => {
+      fileInput.click();
+    });
 
     fileInput.addEventListener("change", () => {
       const file = fileInput.files && fileInput.files[0];
@@ -349,15 +381,12 @@
       video.src = objectUrl;
       video.currentTime = 0;
       seekBar.value = 0;
-      timeLabel.textContent = "00:00 / 00:00";
-      playPauseBtn.textContent = "PLAY";
       playerShell.style.display = "flex";
       video.load();
     });
 
     video.addEventListener("loadedmetadata", () => {
       seekBar.value = 0;
-      timeLabel.textContent = `00:00 / ${formatTime(video.duration)}`;
     });
 
     playPauseBtn.addEventListener("click", () => {
@@ -369,20 +398,22 @@
     });
 
     video.addEventListener("play", () => {
-      playPauseBtn.textContent = "PAUSA";
+      playPauseBtn.classList.add("is-playing");
     });
 
     video.addEventListener("pause", () => {
-      playPauseBtn.textContent = "PLAY";
+      playPauseBtn.classList.remove("is-playing");
+    });
+
+    video.addEventListener("ended", () => {
+      playPauseBtn.classList.remove("is-playing");
+      seekBar.value = 0;
     });
 
     video.addEventListener("timeupdate", () => {
       if (isSeeking) return;
       const ratio = video.currentTime / video.duration || 0;
       seekBar.value = ratio * 100;
-      timeLabel.textContent = `${formatTime(
-        video.currentTime
-      )} / ${formatTime(video.duration)}`;
     });
 
     seekBar.addEventListener("input", () => {
@@ -409,10 +440,6 @@
           await document.exitFullscreen();
         }
       }
-    });
-
-    document.addEventListener("fullscreenchange", () => {
-      fsBtn.textContent = document.fullscreenElement ? "ESCI" : "FULL";
     });
   </script>
 </body>
