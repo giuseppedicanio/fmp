@@ -20,7 +20,7 @@
       margin-top: 20px;
       max-width: 800px;
       width: 100%;
-      display: none; /* nascosto finché non scegli il file */
+      display: none;
     }
 
     .video-wrapper {
@@ -31,7 +31,7 @@
     video {
       width: 100%;
       display: block;
-      transform: scaleX(-1); /* video sempre capovolto */
+      transform: scaleX(-1);
       background: #000;
       cursor: pointer;
     }
@@ -48,8 +48,8 @@
 
     button {
       padding: 6px 10px;
-      border: none;        /* niente contorno */
-      outline: none;       /* niente contorno focus */
+      border: none;
+      outline: none;
       background: #fff;
       cursor: pointer;
     }
@@ -61,17 +61,17 @@
     .time-display {
       min-width: 110px;
       text-align: center;
-      font-family: "Consolas", "Courier New", monospace; /* font diverso */
+      font-family: "Consolas", "Courier New", monospace;
       font-size: 14px;
     }
 
-    /* Slider base: striscia senza pallina visibile */
+    /* Slider base: striscia senza pallina, SPIGOLI NETTI */
     input[type="range"] {
       -webkit-appearance: none;
       appearance: none;
       height: 6px;
       background: #ddd;
-      border-radius: 3px;
+      border-radius: 0;   /* niente arrotondamento */
       outline: none;
       cursor: pointer;
     }
@@ -79,11 +79,11 @@
     /* WebKit (Chrome, Edge, Safari, Opera) - traccia */
     input[type="range"]::-webkit-slider-runnable-track {
       height: 6px;
-      background: transparent; /* usiamo background inline JS */
-      border-radius: 3px;
+      background: transparent;
+      border-radius: 0;   /* niente arrotondamento */
     }
 
-    /* WebKit - “pallina” invisibile */
+    /* WebKit - pallina invisibile */
     input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
@@ -97,18 +97,18 @@
     /* Firefox - traccia */
     input[type="range"]::-moz-range-track {
       height: 6px;
-      background: transparent; /* usiamo background inline JS */
-      border-radius: 3px;
+      background: transparent;
+      border-radius: 0;   /* niente arrotondamento */
     }
 
-    /* Firefox - riempimento parte “passata” */
+    /* Firefox - riempimento */
     input[type="range"]::-moz-range-progress {
       height: 6px;
       background: #000;
-      border-radius: 3px;
+      border-radius: 0;   /* niente arrotondamento */
     }
 
-    /* Firefox - “pallina” invisibile */
+    /* Firefox - pallina invisibile */
     input[type="range"]::-moz-range-thumb {
       width: 0;
       height: 0;
@@ -126,15 +126,15 @@
 
     input[type="range"]::-ms-fill-lower {
       background: #000;
-      border-radius: 3px;
+      border-radius: 0;   /* niente arrotondamento */
     }
 
     input[type="range"]::-ms-fill-upper {
       background: #ddd;
-      border-radius: 3px;
+      border-radius: 0;   /* niente arrotondamento */
     }
 
-    /* IE/Edge - “pallina” invisibile */
+    /* IE/Edge - pallina invisibile */
     input[type="range"]::-ms-thumb {
       width: 0;
       height: 0;
@@ -173,7 +173,6 @@
     let videoURL = null;
     let seekingByUser = false;
 
-    // Format seconds to M:SS
     function formatTime(seconds) {
       if (isNaN(seconds) || !isFinite(seconds)) return '0:00';
       const m = Math.floor(seconds / 60);
@@ -181,7 +180,6 @@
       return m + ':' + (s < 10 ? '0' + s : s);
     }
 
-    // Aggiorna sfondo slider (riempimento) in base alla percentuale
     function updateSeekBarBackground(percent) {
       seekBar.style.background = `linear-gradient(to right, #000 0%, #000 ${percent}%, #ddd ${percent}%, #ddd 100%)`;
     }
@@ -227,7 +225,6 @@
     });
 
     video.addEventListener('loadedmetadata', () => {
-      // quando conosciamo la durata, aggiorniamo il display
       updateTimeDisplay();
     });
 
@@ -243,14 +240,11 @@
       playPauseBtn.textContent = 'Play';
     });
 
-    // Click sul video per play/pausa
     video.addEventListener('click', () => {
       togglePlayPause();
     });
 
-    // Barra spaziatrice per play/pausa
     document.addEventListener('keydown', (event) => {
-      // Evita di fermare la scrittura se un input è attivo
       const active = document.activeElement;
       const isTypingElement =
         active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA');
@@ -263,7 +257,6 @@
       }
     });
 
-    // Aggiorna tempo e barra mentre il video va
     video.addEventListener('timeupdate', () => {
       if (!seekingByUser) {
         const current = video.currentTime;
@@ -275,7 +268,6 @@
       }
     });
 
-    // Interazione con seek bar
     seekBar.addEventListener('input', () => {
       seekingByUser = true;
       const duration = video.duration || 0;
@@ -291,13 +283,11 @@
       seekingByUser = false;
     });
 
-    // Volume
     volumeSlider.addEventListener('input', () => {
       video.volume = volumeSlider.value;
       updateVolumeBackground(volumeSlider.value * 100);
     });
 
-    // Inizializza sfondo volume
     updateVolumeBackground(volumeSlider.value * 100);
   </script>
 </body>
