@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Flipped Media Player</title>
+  <title>Simple Flipped Video Player</title>
   <style>
     body {
       margin: 0;
@@ -20,7 +20,7 @@
       margin-top: 20px;
       max-width: 800px;
       width: 100%;
-      display: none; /* hidden until file is selected */
+      display: none; /* nascosto finché non scegli il file */
     }
 
     .video-wrapper {
@@ -31,7 +31,7 @@
     video {
       width: 100%;
       display: block;
-      transform: scaleX(-1); /* flip video horizontally */
+      transform: scaleX(-1); /* flip orizzontale del video */
       background: #000;
     }
 
@@ -41,6 +41,7 @@
       gap: 10px;
       padding: 10px 0;
       color: #000;
+      background: white;
     }
 
     button {
@@ -63,19 +64,15 @@
       text-align: center;
       font-family: monospace;
     }
-
-    .spacer {
-      flex: 1;
-    }
   </style>
 </head>
 <body>
   <h2>Flipped Video Player</h2>
 
-  <!-- Step 1: Only file selector shown at start -->
+  <!-- All'inizio solo il selettore file -->
   <input type="file" id="file-input" accept="video/*" />
 
-  <!-- Step 2: Player appears after file is chosen -->
+  <!-- Player che compare dopo aver scelto il file -->
   <div id="player-container">
     <div class="video-wrapper">
       <video id="video" playsinline></video>
@@ -117,7 +114,7 @@
       const file = fileInput.files[0];
       if (!file) return;
 
-      // Release old URL if any
+      // Rilascia vecchia URL se c'è
       if (videoURL) {
         URL.revokeObjectURL(videoURL);
       }
@@ -147,7 +144,7 @@
       playPauseBtn.textContent = 'Play';
     });
 
-    // Update time and seek bar as video plays
+    // Aggiorna tempo e barra mentre il video va
     video.addEventListener('timeupdate', () => {
       if (!seekingByUser) {
         const current = video.currentTime;
@@ -159,7 +156,7 @@
       }
     });
 
-    // Seek bar interaction
+    // Interazione con seek bar
     seekBar.addEventListener('input', () => {
       seekingByUser = true;
       const duration = video.duration || 0;
@@ -173,20 +170,22 @@
       seekingByUser = false;
     });
 
-    // Volume control
+    // Volume
     volumeSlider.addEventListener('input', () => {
       video.volume = volumeSlider.value;
     });
 
-    // Fullscreen
+    // Fullscreen: tutto il contenitore (video capovolto + comandi dritti)
     fullscreenBtn.addEventListener('click', () => {
+      const elem = playerContainer;
+
       if (!document.fullscreenElement) {
-        if (video.requestFullscreen) {
-          video.requestFullscreen();
-        } else if (video.webkitRequestFullscreen) {
-          video.webkitRequestFullscreen();
-        } else if (video.msRequestFullscreen) {
-          video.msRequestFullscreen();
+        if (elem.requestFullscreen) {
+          elem.requestFullscreen();
+        } else if (elem.webkitRequestFullscreen) {
+          elem.webkitRequestFullscreen();
+        } else if (elem.msRequestFullscreen) {
+          elem.msRequestFullscreen();
         }
       } else {
         if (document.exitFullscreen) {
