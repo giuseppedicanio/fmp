@@ -19,11 +19,27 @@
       font-family: system-ui, sans-serif;
     }
 
+    /* normale */
     #video {
       max-width: 90vw;
       max-height: 80vh;
       background: #000;
-      transform: scaleX(-1); /* specchia il video (+ controlli) */
+      transform: scaleX(-1);
+    }
+
+    /* fullscreen standard */
+    #video:fullscreen {
+      transform: scaleX(-1);
+    }
+
+    /* fullscreen WebKit (Safari, vecchi Chrome) */
+    #video:-webkit-full-screen {
+      transform: scaleX(-1);
+    }
+
+    /* fullscreen Firefox */
+    #video:-moz-full-screen {
+      transform: scaleX(-1);
     }
   </style>
 </head>
