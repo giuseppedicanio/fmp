@@ -19,25 +19,23 @@
       font-family: system-ui, sans-serif;
     }
 
-    /* normale */
+    /* Normale: video NON flippato */
     #video {
       max-width: 90vw;
       max-height: 80vh;
       background: #000;
-      transform: scaleX(-1);
+      transform: none;
     }
 
-    /* fullscreen standard */
+    /* Fullscreen: video flippato (anche i controlli, non si può dividerli) */
     #video:fullscreen {
       transform: scaleX(-1);
     }
 
-    /* fullscreen WebKit (Safari, vecchi Chrome) */
     #video:-webkit-full-screen {
       transform: scaleX(-1);
     }
 
-    /* fullscreen Firefox */
     #video:-moz-full-screen {
       transform: scaleX(-1);
     }
