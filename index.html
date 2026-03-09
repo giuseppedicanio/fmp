@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Simple Flipped Video Player</title>
+  <title>Video Player</title>
   <style>
     body {
       margin: 0;
@@ -21,6 +21,11 @@
       max-width: 800px;
       width: 100%;
       display: none; /* nascosto finché non scegli il file */
+      transition: max-width 0.2s ease;
+    }
+
+    #player-container.large {
+      max-width: 1200px; /* versione più grande */
     }
 
     .video-wrapper {
@@ -31,7 +36,7 @@
     video {
       width: 100%;
       display: block;
-      transform: scaleX(-1); /* flip orizzontale del video */
+      transform: scaleX(-1); /* video sempre capovolto */
       background: #000;
     }
 
@@ -42,6 +47,7 @@
       padding: 10px 0;
       color: #000;
       background: white;
+      flex-wrap: wrap;
     }
 
     button {
@@ -55,20 +61,55 @@
       background: #f0f0f0;
     }
 
-    input[type="range"] {
-      cursor: pointer;
-    }
-
     .time-display {
       min-width: 70px;
       text-align: center;
       font-family: monospace;
     }
+
+    /* Slider come striscia senza pallina visibile */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 6px;
+      background: #ddd;
+      border-radius: 3px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 0;
+      height: 0;
+      background: transparent;
+      border: none;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 0;
+      height: 0;
+      background: transparent;
+      border: none;
+    }
+
+    input[type="range"]::-ms-thumb {
+      width: 0;
+      height: 0;
+      background: transparent;
+      border: none;
+    }
+
+    /* Traccia per Firefox */
+    input[type="range"]::-moz-range-track {
+      height: 6px;
+      background: #ddd;
+      border-radius: 3px;
+    }
   </style>
 </head>
 <body>
-  <h2>Flipped Video Player</h2>
-
   <!-- All'inizio solo il selettore file -->
   <input type="file" id="file-input" accept="video/*" />
 
@@ -84,8 +125,9 @@
 
       <input type="range" id="seek-bar" min="0" max="100" value="0" style="flex: 1;" />
 
-      <input type="range" id="volume" min="0" max="1" step="0.01" value="1" />
-      <button id="fullscreen">Full</button>
+      <input type="range" id="volume" min="0" max="1" step="0.01" value="1" style="width: 120px;" />
+
+      <button id="size-toggle">Bigger</button>
     </div>
   </div>
 
@@ -97,7 +139,7 @@
     const timeDisplay = document.getElementById('time-display');
     const seekBar = document.getElementById('seek-bar');
     const volumeSlider = document.getElementById('volume');
-    const fullscreenBtn = document.getElementById('fullscreen');
+    const sizeToggleBtn = document.getElementById('size-toggle');
 
     let videoURL = null;
     let seekingByUser = false;
@@ -108,6 +150,15 @@
       const m = Math.floor(seconds / 60);
       const s = Math.floor(seconds % 60);
       return m + ':' + (s < 10 ? '0' + s : s);
+    }
+
+    // Aggiorna sfondo slider (riempimento) in base alla percentuale
+    function updateSeekBarBackground(percent) {
+      seekBar.style.background = `linear-gradient(to right, #000 0%, #000 ${percent}%, #ddd ${percent}%, #ddd 100%)`;
+    }
+
+    function updateVolumeBackground(percent) {
+      volumeSlider.style.background = `linear-gradient(to right, #000 0%, #000 ${percent}%, #ddd ${percent}%, #ddd 100%)`;
     }
 
     fileInput.addEventListener('change', () => {
@@ -125,6 +176,11 @@
 
       playerContainer.style.display = 'block';
       playPauseBtn.textContent = 'Play';
+
+      // reset barre
+      seekBar.value = 0;
+      updateSeekBarBackground(0);
+      updateVolumeBackground(volumeSlider.value * 100);
     });
 
     playPauseBtn.addEventListener('click', () => {
@@ -151,7 +207,9 @@
         const duration = video.duration || 0;
         timeDisplay.textContent = formatTime(current);
         if (duration > 0) {
-          seekBar.value = (current / duration) * 100;
+          const percent = (current / duration) * 100;
+          seekBar.value = percent;
+          updateSeekBarBackground(percent);
         }
       }
     });
@@ -161,6 +219,7 @@
       seekingByUser = true;
       const duration = video.duration || 0;
       const value = seekBar.value;
+      updateSeekBarBackground(value);
       if (duration > 0) {
         video.currentTime = (value / 100) * duration;
       }
@@ -173,29 +232,18 @@
     // Volume
     volumeSlider.addEventListener('input', () => {
       video.volume = volumeSlider.value;
+      updateVolumeBackground(volumeSlider.value * 100);
     });
 
-    // Fullscreen: tutto il contenitore (video capovolto + comandi dritti)
-    fullscreenBtn.addEventListener('click', () => {
-      const elem = playerContainer;
+    // Inizializza sfondo volume
+    updateVolumeBackground(volumeSlider.value * 100);
 
-      if (!document.fullscreenElement) {
-        if (elem.requestFullscreen) {
-          elem.requestFullscreen();
-        } else if (elem.webkitRequestFullscreen) {
-          elem.webkitRequestFullscreen();
-        } else if (elem.msRequestFullscreen) {
-          elem.msRequestFullscreen();
-        }
-      } else {
-        if (document.exitFullscreen) {
-          document.exitFullscreen();
-        } else if (document.webkitExitFullscreen) {
-          document.webkitExitFullscreen();
-        } else if (document.msExitFullscreen) {
-          document.msExitFullscreen();
-        }
-      }
+    // Bottone per ingrandire/rimpicciolire il player (non full screen)
+    sizeToggleBtn.addEventListener('click', () => {
+      playerContainer.classList.toggle('large');
+      sizeToggleBtn.textContent = playerContainer.classList.contains('large')
+        ? 'Smaller'
+        : 'Bigger';
     });
   </script>
 </body>
