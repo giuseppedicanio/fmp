@@ -2,15 +2,14 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
-  <title></title>
+  <title>Video Flippato</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      margin: 0;
-      background: #fff;
       min-height: 100vh;
+      background: #fff;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -19,31 +18,24 @@
       font-family: system-ui, sans-serif;
     }
 
-    /* Normale: video NON flippato */
+    #videoWrapper {
+      transform: scaleX(-1);       /* flip orizzontale */
+      background: #000;
+    }
+
     #video {
       max-width: 90vw;
       max-height: 80vh;
+      display: block;
       background: #000;
-      transform: none;
-    }
-
-    /* Fullscreen: video flippato (anche i controlli, non si può dividerli) */
-    #video:fullscreen {
-      transform: scaleX(-1);
-    }
-
-    #video:-webkit-full-screen {
-      transform: scaleX(-1);
-    }
-
-    #video:-moz-full-screen {
-      transform: scaleX(-1);
     }
   </style>
 </head>
 <body>
   <input id="fileInput" type="file" accept="video/*" />
-  <video id="video" controls></video>
+  <div id="videoWrapper">
+    <video id="video" controls></video>
+  </div>
 
   <script>
     const fileInput = document.getElementById("fileInput");
