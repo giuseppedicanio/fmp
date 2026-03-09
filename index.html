@@ -103,6 +103,14 @@
       gap: 8px;
     }
 
+    .video-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
     .video-frame {
       position: relative;
       background: #000;
@@ -112,14 +120,14 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      max-width: 100%;
+      margin: 0 auto;
     }
 
-    .video-container {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+    /* quando il container è in fullscreen, rimpicciolisco e centro il player */
+    .is-fullscreen .video-frame {
+      max-width: 80vw;
+      max-height: 80vh;
     }
 
     .video-mirror-wrapper {
@@ -161,9 +169,10 @@
       gap: 10px;
     }
 
+    /* pulsante play/pause circolare con icone standard */
     .ctrl-circle {
-      width: 28px;
-      height: 28px;
+      width: 26px;
+      height: 26px;
       border-radius: 999px;
       border: 1px solid var(--border);
       background: #ffffff;
@@ -185,6 +194,7 @@
       transform: translateY(1px);
     }
 
+    /* play (triangolo) */
     #playPauseBtn::before {
       content: "";
       border-style: solid;
@@ -193,6 +203,7 @@
       margin-left: 2px;
     }
 
+    /* pausa (due stanghette) */
     #playPauseBtn.is-playing::before,
     #playPauseBtn.is-playing::after {
       content: "";
@@ -210,8 +221,8 @@
       margin-left: 2px;
     }
 
-    /* BARRA SEMPLICE */
-    input[type="range"] {
+    /* barra di avanzamento super semplice: linea + pallino piccolo */
+    #seekBar {
       -webkit-appearance: none;
       appearance: none;
       width: 100%;
@@ -222,39 +233,74 @@
       cursor: pointer;
     }
 
-    input[type="range"]::-webkit-slider-thumb {
+    #seekBar::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      width: 10px;
-      height: 10px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
       background: #111;
       cursor: pointer;
-      margin-top: -4px;
+      margin-top: -3px; /* centra il pallino sulla linea */
     }
 
-    input[type="range"]::-moz-range-thumb {
-      width: 10px;
-      height: 10px;
+    #seekBar::-moz-range-thumb {
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
       background: #111;
       cursor: pointer;
       border: none;
     }
 
-    input[type="range"]::-moz-range-track {
+    #seekBar::-moz-range-track {
       background: #e2e2e2;
       height: 2px;
       border-radius: 999px;
     }
 
+    /* volume slider un po' più piccolo, stesso stile */
     #volume {
-      max-width: 80px;
+      -webkit-appearance: none;
+      appearance: none;
+      width: 70px;
+      height: 2px;
+      border-radius: 999px;
+      background: #e2e2e2;
+      outline: none;
+      cursor: pointer;
     }
 
-    #fsBtn {
-      width: 24px;
-      height: 24px;
+    #volume::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #111;
+      cursor: pointer;
+      margin-top: -3px;
+    }
+
+    #volume::-moz-range-thumb {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #111;
+      cursor: pointer;
+      border: none;
+    }
+
+    #volume::-moz-range-track {
+      background: #e2e2e2;
+      height: 2px;
+      border-radius: 999px;
+    }
+
+    /* bottone icona (volume, fullscreen) */
+    .icon-btn {
+      width: 26px;
+      height: 26px;
       border-radius: 6px;
       border: 1px solid var(--border);
       background: #ffffff;
@@ -262,23 +308,70 @@
       position: relative;
       transition: background 0.15s ease, border-color 0.15s ease,
         transform 0.08s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    #fsBtn::before {
-      content: "";
-      position: absolute;
-      inset: 4px;
-      border: 1px solid var(--accent);
-      border-radius: 3px;
-    }
-
-    #fsBtn:hover {
+    .icon-btn:hover {
       background: #f4f4f4;
       border-color: #d0d0d0;
     }
 
-    #fsBtn:active {
+    .icon-btn:active {
       transform: translateY(1px);
+    }
+
+    /* icona volume stile “casse + onde” */
+    .volume-icon::before,
+    .volume-icon::after {
+      content: "";
+      position: absolute;
+    }
+
+    .volume-icon::before {
+      /* cassa: rettangolo + triangolino */
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      clip-path: polygon(0 20%, 60% 20%, 100% 0, 100% 100%, 60% 80%, 0 80%);
+    }
+
+    .volume-icon::after {
+      /* onda singola */
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 2px solid var(--accent);
+      border-left-color: transparent;
+      border-bottom-color: transparent;
+      transform: translateX(6px) rotate(45deg);
+    }
+
+    .volume-icon.is-muted::after {
+      opacity: 0;
+    }
+
+    .volume-icon.is-muted::before {
+      clip-path: polygon(0 20%, 60% 20%, 100% 0, 100% 100%, 60% 80%, 0 80%, 0 50%, 100% 50%, 100% 60%, 0 60%);
+    }
+
+    /* icona fullscreen stile quattro angoli */
+    .fullscreen-icon::before,
+    .fullscreen-icon::after {
+      content: "";
+      position: absolute;
+      width: 70%;
+      height: 70%;
+      border: 1px solid var(--accent);
+      border-top: none;
+      border-left: none;
+      transform: translate(15%, 15%);
+      box-sizing: border-box;
+    }
+
+    .fullscreen-icon::after {
+      transform: translate(-15%, -15%) rotate(180deg);
     }
 
     @media (max-width: 600px) {
@@ -324,6 +417,7 @@
           </div>
 
           <div class="controls-right">
+            <button id="volIcon" type="button" class="icon-btn volume-icon"></button>
             <input
               id="volume"
               type="range"
@@ -332,7 +426,7 @@
               step="0.01"
               value="1"
             />
-            <button id="fsBtn" type="button"></button>
+            <button id="fsBtn" type="button" class="icon-btn fullscreen-icon"></button>
           </div>
         </div>
       </div>
@@ -347,11 +441,13 @@
     const playPauseBtn = document.getElementById("playPauseBtn");
     const seekBar = document.getElementById("seekBar");
     const volume = document.getElementById("volume");
+    const volIcon = document.getElementById("volIcon");
     const fsBtn = document.getElementById("fsBtn");
     const videoContainer = document.getElementById("videoContainer");
 
     let objectUrl = null;
     let isSeeking = false;
+    let lastVolumeBeforeMute = 1;
 
     uploadBtn.addEventListener("click", () => {
       fileInput.click();
@@ -413,10 +509,33 @@
       isSeeking = false;
     });
 
+    // volume + icona mute
     volume.addEventListener("input", () => {
-      video.volume = parseFloat(volume.value);
+      const v = parseFloat(volume.value);
+      video.volume = v;
+      if (v === 0) {
+        volIcon.classList.add("is-muted");
+      } else {
+        volIcon.classList.remove("is-muted");
+        lastVolumeBeforeMute = v;
+      }
     });
 
+    volIcon.addEventListener("click", () => {
+      if (video.volume === 0) {
+        const v = lastVolumeBeforeMute || 1;
+        video.volume = v;
+        volume.value = v;
+        volIcon.classList.remove("is-muted");
+      } else {
+        lastVolumeBeforeMute = video.volume || parseFloat(volume.value) || 1;
+        video.volume = 0;
+        volume.value = 0;
+        volIcon.classList.add("is-muted");
+      }
+    });
+
+    // fullscreen con player più piccolo e centrato
     fsBtn.addEventListener("click", async () => {
       if (!document.fullscreenElement) {
         if (videoContainer.requestFullscreen) {
@@ -426,6 +545,14 @@
         if (document.exitFullscreen) {
           await document.exitFullscreen();
         }
+      }
+    });
+
+    document.addEventListener("fullscreenchange", () => {
+      if (document.fullscreenElement === videoContainer) {
+        videoContainer.classList.add("is-fullscreen");
+      } else {
+        videoContainer.classList.remove("is-fullscreen");
       }
     });
   </script>
