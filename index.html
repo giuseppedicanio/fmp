@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Flipped Video Player (File, Link, YouTube)</title>
+  <title>Video Player</title>
   <style>
     body {
       margin: 0;
@@ -16,51 +16,8 @@
       box-sizing: border-box;
     }
 
-    .source-section {
-      width: 100%;
-      max-width: 800px;
-      margin-bottom: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      font-size: 14px;
-    }
-
-    .source-row {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-
-    input[type="text"] {
-      flex: 1;
-      padding: 6px 8px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-    }
-
-    #load-link-btn {
-      padding: 6px 10px;
-      border: 1px solid #ccc;
-      background: #fff;
-      cursor: pointer;
-    }
-
-    #load-link-btn:hover {
-      background: #f0f0f0;
-    }
-
-    #error {
-      color: red;
-      min-height: 18px;
-      font-size: 13px;
-      max-width: 800px;
-      width: 100%;
-    }
-
-    /* Player per file/link diretto (tag <video>) */
-    #video-player-container {
-      margin-top: 10px;
+    #player-container {
+      margin-top: 20px;
       max-width: 800px;
       width: 100%;
       display: none;
@@ -74,7 +31,7 @@
     video {
       width: 100%;
       display: block;
-      transform: scaleX(-1);  /* sempre flippato */
+      transform: scaleX(-1);
       background: #000;
       cursor: pointer;
     }
@@ -108,23 +65,25 @@
       font-size: 14px;
     }
 
-    /* Slider: striscia dritta, senza pallina visibile */
+    /* Slider base: striscia senza pallina, SPIGOLI NETTI */
     input[type="range"] {
       -webkit-appearance: none;
       appearance: none;
       height: 6px;
       background: #ddd;
-      border-radius: 0;
+      border-radius: 0;   /* niente arrotondamento */
       outline: none;
       cursor: pointer;
     }
 
+    /* WebKit (Chrome, Edge, Safari, Opera) - traccia */
     input[type="range"]::-webkit-slider-runnable-track {
       height: 6px;
       background: transparent;
-      border-radius: 0;
+      border-radius: 0;   /* niente arrotondamento */
     }
 
+    /* WebKit - pallina invisibile */
     input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
@@ -135,18 +94,21 @@
       margin-top: 0;
     }
 
+    /* Firefox - traccia */
     input[type="range"]::-moz-range-track {
       height: 6px;
       background: transparent;
-      border-radius: 0;
+      border-radius: 0;   /* niente arrotondamento */
     }
 
+    /* Firefox - riempimento */
     input[type="range"]::-moz-range-progress {
       height: 6px;
       background: #000;
-      border-radius: 0;
+      border-radius: 0;   /* niente arrotondamento */
     }
 
+    /* Firefox - pallina invisibile */
     input[type="range"]::-moz-range-thumb {
       width: 0;
       height: 0;
@@ -154,6 +116,7 @@
       border: none;
     }
 
+    /* IE/Edge legacy - traccia */
     input[type="range"]::-ms-track {
       height: 6px;
       background: transparent;
@@ -163,79 +126,27 @@
 
     input[type="range"]::-ms-fill-lower {
       background: #000;
-      border-radius: 0;
+      border-radius: 0;   /* niente arrotondamento */
     }
 
     input[type="range"]::-ms-fill-upper {
       background: #ddd;
-      border-radius: 0;
+      border-radius: 0;   /* niente arrotondamento */
     }
 
+    /* IE/Edge - pallina invisibile */
     input[type="range"]::-ms-thumb {
       width: 0;
       height: 0;
       background: transparent;
       border: none;
     }
-
-    /* Player per link YouTube (iframe) */
-    #yt-player-container {
-      margin-top: 10px;
-      max-width: 800px;
-      width: 100%;
-      display: none;
-    }
-
-    .yt-wrapper {
-      position: relative;
-      width: 100%;
-      padding-top: 56.25%; /* 16:9 */
-      background: #000;
-      overflow: hidden;
-    }
-
-    #yt-frame {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      border: none;
-      transform: scaleX(-1); /* flip video + controlli YouTube */
-      transform-origin: center;
-    }
-
-    .yt-note {
-      font-size: 12px;
-      color: #444;
-      margin-top: 4px;
-    }
   </style>
 </head>
 <body>
-  <!-- Sorgente 1: file locale -->
-  <div class="source-section">
-    <strong>1. Carica un tuo file video</strong>
-    <input type="file" id="file-input" accept="video/*" />
-  </div>
+  <input type="file" id="file-input" accept="video/*" />
 
-  <!-- Sorgente 2: link (YouTube o file diretto) -->
-  <div class="source-section">
-    <strong>2. Oppure inserisci un link video (YouTube o file diretto)</strong>
-    <div class="source-row">
-      <input
-        type="text"
-        id="video-url-input"
-        placeholder="Es. link YouTube https://www.youtube.com/watch?v=... oppure https://esempio.com/video.mp4"
-      />
-      <button id="load-link-btn">Load</button>
-    </div>
-  </div>
-
-  <div id="error"></div>
-
-  <!-- Player per file locale o link diretto (tag <video>) -->
-  <div id="video-player-container">
+  <div id="player-container">
     <div class="video-wrapper">
       <video id="video" playsinline></video>
     </div>
@@ -250,45 +161,31 @@
     </div>
   </div>
 
-  <!-- Player per link YouTube (iframe) -->
-  <div id="yt-player-container">
-    <div class="yt-wrapper">
-      <iframe
-        id="yt-frame"
-        src=""
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowfullscreen
-      ></iframe>
-    </div>
-    <div class="yt-note">
-      Questo è il player YouTube originale, solo flippato. I tasti spazio/click del tuo player funzionano solo per i file/caricamenti diretti.
-    </div>
-  </div>
-
   <script>
     const fileInput = document.getElementById('file-input');
-    const urlInput = document.getElementById('video-url-input');
-    const loadLinkBtn = document.getElementById('load-link-btn');
-    const errorEl = document.getElementById('error');
-
-    const videoPlayerContainer = document.getElementById('video-player-container');
-    const ytPlayerContainer = document.getElementById('yt-player-container');
+    const playerContainer = document.getElementById('player-container');
     const video = document.getElementById('video');
     const playPauseBtn = document.getElementById('play-pause');
     const timeDisplay = document.getElementById('time-display');
     const seekBar = document.getElementById('seek-bar');
     const volumeSlider = document.getElementById('volume');
-    const ytFrame = document.getElementById('yt-frame');
 
-    let videoURLObject = null;
+    let videoURL = null;
     let seekingByUser = false;
 
-    // --- Utility tempo ---
     function formatTime(seconds) {
       if (isNaN(seconds) || !isFinite(seconds)) return '0:00';
       const m = Math.floor(seconds / 60);
       const s = Math.floor(seconds % 60);
       return m + ':' + (s < 10 ? '0' + s : s);
+    }
+
+    function updateSeekBarBackground(percent) {
+      seekBar.style.background = `linear-gradient(to right, #000 0%, #000 ${percent}%, #ddd ${percent}%, #ddd 100%)`;
+    }
+
+    function updateVolumeBackground(percent) {
+      volumeSlider.style.background = `linear-gradient(to right, #000 0%, #000 ${percent}%, #ddd ${percent}%, #ddd 100%)`;
     }
 
     function updateTimeDisplay() {
@@ -297,119 +194,6 @@
       timeDisplay.textContent = `${formatTime(current)} / ${formatTime(duration)}`;
     }
 
-    // --- Slider UI ---
-    function updateSeekBarBackground(percent) {
-      seekBar.style.background =
-        `linear-gradient(to right, #000 0%, #000 ${percent}%, #ddd ${percent}%, #ddd 100%)`;
-    }
-
-    function updateVolumeBackground(percent) {
-      volumeSlider.style.background =
-        `linear-gradient(to right, #000 0%, #000 ${percent}%, #ddd ${percent}%, #ddd 100%)`;
-    }
-
-    function resetVideoPlayerUI() {
-      seekBar.value = 0;
-      updateSeekBarBackground(0);
-      updateVolumeBackground(volumeSlider.value * 100);
-      updateTimeDisplay();
-      playPauseBtn.textContent = 'Play';
-    }
-
-    // --- Riconoscimento URL YouTube ---
-    function getYouTubeId(url) {
-      try {
-        const u = new URL(url.trim());
-        if (u.hostname.includes('youtube.com')) {
-          if (u.pathname === '/watch') {
-            return u.searchParams.get('v');
-          }
-          const parts = u.pathname.split('/');
-          const last = parts[parts.length - 1];
-          if (last) return last;
-        }
-        if (u.hostname.includes('youtu.be')) {
-          const parts = u.pathname.split('/');
-          const last = parts[parts.length - 1];
-          if (last) return last;
-        }
-      } catch (e) {
-        return null;
-      }
-      return null;
-    }
-
-    // --- Caricamento video da file ---
-    function loadVideoFromFile(file) {
-      if (!file) return;
-
-      // nascondi player YT
-      ytPlayerContainer.style.display = 'none';
-      ytFrame.src = '';
-
-      // rilascia vecchio object URL
-      if (videoURLObject) {
-        URL.revokeObjectURL(videoURLObject);
-        videoURLObject = null;
-      }
-
-      const objectUrl = URL.createObjectURL(file);
-      videoURLObject = objectUrl;
-      video.src = objectUrl;
-      video.load();
-
-      videoPlayerContainer.style.display = 'block';
-      errorEl.textContent = '';
-      resetVideoPlayerUI();
-    }
-
-    // --- Caricamento da link (YouTube o diretto) ---
-    function loadVideoFromLink(rawUrl) {
-      const trimmed = rawUrl.trim();
-      if (!trimmed) {
-        errorEl.textContent = 'Inserisci un link video.';
-        return;
-      }
-
-      const ytId = getYouTubeId(trimmed);
-
-      if (ytId) {
-        // --- Link YouTube ---
-        // nascondi player <video>
-        videoPlayerContainer.style.display = 'none';
-        // stop e pulisci <video>
-        video.pause();
-        video.removeAttribute('src');
-        video.load();
-        if (videoURLObject) {
-          URL.revokeObjectURL(videoURLObject);
-          videoURLObject = null;
-        }
-
-        const embedUrl = `https://www.youtube.com/embed/${ytId}?rel=0&playsinline=1`;
-        ytFrame.src = embedUrl;
-        ytPlayerContainer.style.display = 'block';
-        errorEl.textContent = '';
-      } else {
-        // --- Link diretto a file video ---
-        ytPlayerContainer.style.display = 'none';
-        ytFrame.src = '';
-
-        if (videoURLObject) {
-          URL.revokeObjectURL(videoURLObject);
-          videoURLObject = null;
-        }
-
-        video.src = trimmed;
-        video.load();
-
-        videoPlayerContainer.style.display = 'block';
-        errorEl.textContent = '';
-        resetVideoPlayerUI();
-      }
-    }
-
-    // --- Play/Pausa per <video> ---
     function togglePlayPause() {
       if (!video.src) return;
       if (video.paused) {
@@ -419,24 +203,27 @@
       }
     }
 
-    // --- Eventi sorgenti ---
     fileInput.addEventListener('change', () => {
       const file = fileInput.files[0];
       if (!file) return;
-      loadVideoFromFile(file);
-    });
 
-    loadLinkBtn.addEventListener('click', () => {
-      loadVideoFromLink(urlInput.value);
-    });
-
-    urlInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        loadVideoFromLink(urlInput.value);
+      if (videoURL) {
+        URL.revokeObjectURL(videoURL);
       }
+
+      videoURL = URL.createObjectURL(file);
+      video.src = videoURL;
+      video.load();
+
+      playerContainer.style.display = 'block';
+      playPauseBtn.textContent = 'Play';
+
+      seekBar.value = 0;
+      updateSeekBarBackground(0);
+      updateVolumeBackground(volumeSlider.value * 100);
+      updateTimeDisplay();
     });
 
-    // --- Eventi video locale/diretto ---
     video.addEventListener('loadedmetadata', () => {
       updateTimeDisplay();
     });
@@ -453,12 +240,10 @@
       playPauseBtn.textContent = 'Play';
     });
 
-    // click sul video -> play/pausa
     video.addEventListener('click', () => {
       togglePlayPause();
     });
 
-    // barra spaziatrice -> play/pausa SOLO per il player <video>
     document.addEventListener('keydown', (event) => {
       const active = document.activeElement;
       const isTypingElement =
@@ -467,15 +252,11 @@
       if (isTypingElement) return;
 
       if (event.code === 'Space' || event.key === ' ') {
-        // se è visibile il player <video>, controlliamo quello
-        if (videoPlayerContainer.style.display !== 'none') {
-          event.preventDefault();
-          togglePlayPause();
-        }
+        event.preventDefault();
+        togglePlayPause();
       }
     });
 
-    // aggiornamento tempo e barra durante riproduzione
     video.addEventListener('timeupdate', () => {
       if (!seekingByUser) {
         const current = video.currentTime;
@@ -487,7 +268,6 @@
       }
     });
 
-    // seek bar
     seekBar.addEventListener('input', () => {
       seekingByUser = true;
       const duration = video.duration || 0;
@@ -503,13 +283,11 @@
       seekingByUser = false;
     });
 
-    // volume
     volumeSlider.addEventListener('input', () => {
       video.volume = volumeSlider.value;
       updateVolumeBackground(volumeSlider.value * 100);
     });
 
-    // inizializza barra volume
     updateVolumeBackground(volumeSlider.value * 100);
   </script>
 </body>
