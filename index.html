@@ -19,7 +19,8 @@
     #welcome-message {
       text-align: center;
       font-size: 18px;
-      color: #666;
+      color: #000;
+      margin-top: 20px;
       margin-bottom: 20px;
       line-height: 1.6;
     }
@@ -152,12 +153,12 @@
   </style>
 </head>
 <body>
+  <input type="file" id="file-input" accept="video/*" />
+
   <div id="welcome-message">
     <p>FlippedMediaPlayer is an online media player that allows users to watch videos in mirrored mode.
     Giuseppe Dicanio.</p>
   </div>
-
-  <input type="file" id="file-input" accept="video/*" />
 
   <div id="player-container">
     <div class="video-wrapper">
