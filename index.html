@@ -16,6 +16,14 @@
       box-sizing: border-box;
     }
 
+    #welcome-message {
+      text-align: center;
+      font-size: 18px;
+      color: #666;
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
     #player-container {
       margin-top: 20px;
       max-width: 800px;
@@ -144,6 +152,10 @@
   </style>
 </head>
 <body>
+  <div id="welcome-message">
+    <p>Select a video file to start</p>
+  </div>
+
   <input type="file" id="file-input" accept="video/*" />
 
   <div id="player-container">
@@ -164,6 +176,7 @@
   <script>
     const fileInput = document.getElementById('file-input');
     const playerContainer = document.getElementById('player-container');
+    const welcomeMessage = document.getElementById('welcome-message');
     const video = document.getElementById('video');
     const playPauseBtn = document.getElementById('play-pause');
     const timeDisplay = document.getElementById('time-display');
@@ -215,6 +228,7 @@
       video.src = videoURL;
       video.load();
 
+      welcomeMessage.style.display = 'none';
       playerContainer.style.display = 'block';
       playPauseBtn.textContent = 'Play';
 
